@@ -1,4 +1,4 @@
-# GraphVisualization# Graph Algorithms Visualization
+# Vizualizácia grafových algoritmov# 
 
 Tento projekt je interaktívna aplikácia napísaná v Pythone, ktorá slúži na vizualizáciu rôznych grafových algoritmov. Aplikácia využíva knižnice **Tkinter** na vytváranie grafického rozhrania, **NetworkX** na prácu s grafmi a **Matplotlib** na vykresľovanie grafických prvkov.
 
@@ -10,8 +10,8 @@ Tento projekt je interaktívna aplikácia napísaná v Pythone, ktorá slúži n
   - A*
   - Kruskal
   - Prim
-  - Kosaraju (s vizualizáciou zásobníka a farebným vyznačením silne súvisiacich komponentov)
-  - Tarjan (krok za krokom s vizualizáciou zásobníka a farebným zafarbením výsledných SCC)
+  - Kosaraju 
+  - Tarjan 
 - **Interaktívne pridávanie uzlov a hrán:** Umožňuje používateľovi vytvárať vlastné grafy kliknutím na plátno.
 - **Animácia krokov:** Vizualizácia priebehu algoritmov pomocou animácií, vrátane zvýrazňovania zásobníka a detailov jednotlivých krokov.
 - **Ukladanie a načítanie grafov:** Možnosť uloženia a načítania grafov vrátane pozícií uzlov a váh hrán.
@@ -38,7 +38,7 @@ Repozitár si môžete stiahnuť alebo naklonovať cez Git:
 
 bash
 Copy
-git clone https://github.com/tvoje-meno/graph-algorithms-visualization.git
+git clone https://github.com/ErikHorvath-git/GraphVisualization
 cd graph-algorithms-visualization
 Použitie
 Spustite aplikáciu pomocou príkazu:

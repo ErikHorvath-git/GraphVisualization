@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 class GraphVisualizerApp:
     def __init__(self, master):
         self.master = master
-        self.master.title("Interaktívna vizualizácia grafových algoritmov – Ultimate Učebná Pomôcka")
+        self.master.title("Vizualizácia grafových algoritmov – bakalárska práca")
         self.master.geometry("1300x750")  # Predvolená veľkosť okna
 
         # Nastavenie modernej ttk témy
@@ -38,6 +38,13 @@ class GraphVisualizerApp:
 
         self.create_widgets()
 
+    def clear_step_visualization(self):
+        """Vyčistí vizualizáciu dátovej štruktúry a detailný popis kroku."""
+        self.stack_listbox.delete(0, tk.END)  # Vyčistí zoznam dátovej štruktúry
+        self.details_text.config(state=tk.NORMAL)
+        self.details_text.delete("1.0", tk.END)  # Vyčistí detailný popis kroku
+        self.details_text.config(state=tk.DISABLED)
+
     def create_widgets(self):
         # Paned window rozdeľujúce postranný panel a hlavnú oblasť
         self.paned_window = ttk.PanedWindow(self.master, orient=tk.HORIZONTAL)
@@ -59,7 +66,7 @@ class GraphVisualizerApp:
 
     def create_sidebar_components(self):
         # Pseudokód a vysvetlenie algoritmu
-        pseudocode_label = ttk.Label(self.sidebar, text="Pseudokód / Vysvetlenie", font=("Arial", 12, "bold"))
+        pseudocode_label = ttk.Label(self.sidebar, text="Pseudokód", font=("Arial", 12, "bold"))
         pseudocode_label.pack(anchor=tk.W, pady=(0, 5))
         self.pseudocode_area = tk.Text(self.sidebar, wrap=tk.WORD, height=10, width=40, background="#F5F5F5")
         self.pseudocode_area.pack(fill=tk.X, pady=(0, 10))
@@ -133,7 +140,7 @@ class GraphVisualizerApp:
             dy = pos[1] - event.ydata
             if math.hypot(dx, dy) < threshold:
                 self.annot.xy = pos
-                self.annot.set_text(f"Uzel: {node}")
+                self.annot.set_text(f"Uzol: {node}")
                 self.annot.get_bbox_patch().set_facecolor("lightyellow")
                 self.annot.get_bbox_patch().set_alpha(0.9)
                 vis = True
@@ -152,10 +159,10 @@ class GraphVisualizerApp:
         file_menu.add_separator()
         file_menu.add_command(label="Ukončiť", command=self.master.quit)
         file_menu.add_separator()
-        file_menu.add_command(label="Načítať vzorový graf 1", command=lambda: self.load_sample_graph(get_sample_graph_1))
-        file_menu.add_command(label="Načítať vzorový graf 2", command=lambda: self.load_sample_graph(get_sample_graph_2))
-        file_menu.add_command(label="Načítať orientovaný graf", command=lambda: self.load_sample_graph(get_directed_graph))
-        file_menu.add_command(label="Načítať komplexný graf", command=lambda: self.load_sample_graph(get_complex_graph))
+        file_menu.add_command(label="Načítať neorientovaný graf 1", command=lambda: self.load_sample_graph(get_sample_graph_1))
+        file_menu.add_command(label="Načítať neorientovaný graf 2", command=lambda: self.load_sample_graph(get_sample_graph_2))
+        file_menu.add_command(label="Načítať orientovaný graf 1", command=lambda: self.load_sample_graph(get_directed_graph))
+        file_menu.add_command(label="Načítať orientovaný graf 2", command=lambda: self.load_sample_graph(get_complex_graph))
         menubar.add_cascade(label="Súbor", menu=file_menu)
 
         # Menu algoritmov
@@ -173,7 +180,7 @@ class GraphVisualizerApp:
         view_menu = tk.Menu(menubar, tearoff=0)
         self.directed_var = tk.BooleanVar(value=False)
         view_menu.add_checkbutton(label="Orientovaný graf", variable=self.directed_var, command=self.toggle_directed)
-        menubar.add_cascade(label="Zobrazenie", menu=view_menu)
+        menubar.add_cascade(label="Režim", menu=view_menu)
 
         # Pomoc
         help_menu = tk.Menu(menubar, tearoff=0)
@@ -268,7 +275,7 @@ class GraphVisualizerApp:
     def show_about(self):
         about_message = (
             "Interaktívna vizualizácia grafových algoritmov\n"
-            "Táto aplikácia bola navrhnutá ako ultimátna učebná pomôcka pre študentov a učiteľov.\n"
+            "Táto aplikácia bola navrhnutá ako učebná pomôcka pre študentov a učiteľov.\n"
             "Používa Tkinter, NetworkX a Matplotlib.\n"
             "Pre detailné vysvetlenie kliknite na tlačidlo Tutorial.\n"
             "Užite si učenie!"
@@ -324,7 +331,7 @@ class GraphVisualizerApp:
             self.draw_graph()
             self.add_node_mode = False
             self.master.config(cursor="")
-            self.update_status(f"Uzel {node_id} pridaný.")
+            self.update_status(f"Uzol {node_id} pridaný.")
 
     def on_pick(self, event):
         if self.add_edge_mode:
@@ -521,7 +528,7 @@ class GraphVisualizerApp:
                     self.stack_listbox.insert(tk.END, f"Hrana: ({u}->{v}), Hodnota: {weight}")
                 elif len(item) == 2:
                     distance, node = item
-                    self.stack_listbox.insert(tk.END, f"Uzel: {node}, Vzdialenosť: {distance}")
+                    self.stack_listbox.insert(tk.END, f"Uzol: {node}, Vzdialenosť: {distance}")
                 else:
                     self.stack_listbox.insert(tk.END, f"{item}")
             else:
@@ -540,9 +547,9 @@ class GraphVisualizerApp:
             self.graph.remove_node(node_id)
             self.positions.pop(node_id, None)
             self.draw_graph()
-            self.update_status(f"Uzel {node_id} zmazaný.")
+            self.update_status(f"Uzol {node_id} zmazaný.")
         else:
-            messagebox.showerror("Chyba", "Uzel s týmto ID neexistuje.")
+            messagebox.showerror("Chyba", "Uzol s týmto ID neexistuje.")
 
     def delete_edge(self):
         edge = simpledialog.askstring("Zmazať hranu", "Zadajte hranu vo formáte 'zdroj,ciel':")
@@ -573,6 +580,7 @@ class GraphVisualizerApp:
     # ----------------------- Implementácie algoritmov -----------------------
 
     def run_dijkstra(self):
+        self.clear_step_visualization()
         # Pred spustením overíme, či sú váhy nastavené; ak nie, upozorníme používateľa
         if not self.check_weights():
             messagebox.showwarning("Upozornenie", "Nie všetky hrany majú nastavenú váhu. Váhy budú deaktivované pre tento algoritmus.")
@@ -581,17 +589,27 @@ class GraphVisualizerApp:
             self.show_weights = True
 
         pseudocode = (
-            "Dijkstrov algoritmus:\n"
-            "1. Inicializácia vzdialeností (zdroj = 0, ostatné = ∞)\n"
-            "2. Pridanie zdrojového uzla do fronty priorít\n"
-            "3. Kým fronta nie je prázdna:\n"
-            "   a. Vyberie sa uzol s najmenšou vzdialenosťou\n"
-            "   b. Pre každého suseda: ak nová vzdialenosť < súčasná, aktualizácia (zelená), inak (červená)\n"
-            "4. Návrat najkratšej cesty"
+            "Vstup: Graf G a počiatočný vrchol v0\n" \
+            "1. Pre všetky vrcholy v:\n" \
+            "2. stav(v) ← nenájdený\n" \
+            "3. h(v) ← +∞\n" \
+            "4. P(v) ← nedefinované\n" \
+            "5. stav(v0) ← otvorený\n" \
+            "6. h(v0) ← 0\n" \
+            "7. Pokiaľ existujú nejaké otvorené vrcholy:\n" \
+            "8. Vybereme otvorený vrchol v, ktorého h(v) je najmenší.\n" \
+            "9. Pre všetkých následníkov w vrcholu v:\n" \
+            "10. Pokiaľ h(w) > h(v) + `(v, w):\n" \
+            "11. h(w) ← h(v) + `(v, w)\n" \
+            "12. stav(w) ← otvorený\n" \
+            "13. P(w) ← v\n" \
+            "14. stav(v) ← uzavrený\n" \
+            "Výstup: Pole vzdialeností h, pole predchodcov P"
         )
         self.display_pseudocode(pseudocode)
 
         source = simpledialog.askinteger("Dijkstrov algoritmus", "Zadajte zdrojový uzol:")
+        root.update()
         target = simpledialog.askinteger("Dijkstrov algoritmus", "Zadajte cieľový uzol:")
         if source not in self.graph.nodes or target not in self.graph.nodes:
             messagebox.showerror("Chyba", "Nesprávne uzly.")
@@ -650,6 +668,7 @@ class GraphVisualizerApp:
             messagebox.showerror("Chyba", "Medzi zadanými uzlami neexistuje cesta.")
 
     def run_bellman_ford(self):
+        self.clear_step_visualization()
         if not self.check_weights():
             messagebox.showwarning("Upozornenie", "Nie všetky hrany majú nastavenú váhu. Váhy budú deaktivované pre tento algoritmus.")
             self.show_weights = False
@@ -657,15 +676,24 @@ class GraphVisualizerApp:
             self.show_weights = True
 
         pseudocode = (
-            "Bellman-Fordov algoritmus:\n"
-            "1. Inicializácia vzdialeností (zdroj = 0, ostatné = ∞)\n"
-            "2. Relaxácia všetkých hrán |V|-1 krát\n"
-            "3. Kontrola negatívnych cyklov\n"
-            "4. Návrat najkratšej cesty"
+                    "Vstup: Graf G a počiatočný vrchol v0\n"
+                    "1. Inicializácia vzdialeností: pre všetky vrcholy v\n"
+                    "2.     d(v) ← +∞\n"
+                    "3. d(v0) ← 0\n"
+                    "4. Pre |V| - 1 iterácií:\n"
+                    "5.     Pre každú hranu (u, v) s váhou w:\n"
+                    "6.         Ak d(u) + w < d(v):\n"
+                    "7.             d(v) ← d(u) + w\n"
+                    "8. Na kontrolu záporných cyklov:\n"
+                    "9.     Pre každú hranu (u, v) s váhou w:\n"
+                    "10.        Ak d(u) + w < d(v):\n"
+                    "11.            Detekovaný záporný cyklus!\n"
+                    "Výstup: Pole vzdialeností d"
         )
         self.display_pseudocode(pseudocode)
 
         source = simpledialog.askinteger("Bellman-Fordov algoritmus", "Zadajte zdrojový uzol:")
+        root.update()
         target = simpledialog.askinteger("Bellman-Fordov algoritmus", "Zadajte cieľový uzol:")
         if source not in self.graph.nodes or target not in self.graph.nodes:
             messagebox.showerror("Chyba", "Nesprávne uzly.")
@@ -717,6 +745,7 @@ class GraphVisualizerApp:
             messagebox.showerror("Chyba", "Medzi zadanými uzlami neexistuje cesta.")
 
     def run_astar(self):
+        self.clear_step_visualization()
         if not self.check_weights():
             messagebox.showwarning("Upozornenie", "Nie všetky hrany majú nastavenú váhu. Váhy budú deaktivované pre tento algoritmus.")
             self.show_weights = False
@@ -724,17 +753,25 @@ class GraphVisualizerApp:
             self.show_weights = True
 
         pseudocode = (
-            "A* algoritmus:\n"
-            "1. Inicializácia skóre g a f (zdroj: 0 + heuristika)\n"
-            "2. Pridanie zdrojového uzla do otvoreného zoznamu\n"
-            "3. Kým zoznam nie je prázdny:\n"
-            "   a. Vyberie sa uzol s najnižším f skóre\n"
-            "   b. Pre každého suseda: ak sa zlepší skóre, aktualizácia (zelená), inak (červená)\n"
-            "4. Návrat najkratšej cesty"
+          "Vstup: Graf G, počiatočný vrchol v0 a cieľový vrchol v_end\n"
+          "1. Inicializácia: g(v) ← +∞, f(v) ← +∞ pre všetky vrcholy\n"
+          "2. g(v0) ← 0\n"
+          "3. f(v0) ← heuristika(v0, v_end)\n"
+          "4. Otvorený zoznam ← {v0}\n"
+          "5. Kým otvorený zoznam nie je prázdny:\n"
+          "6.     Vyber vrchol v s najnižším f(v)\n"
+          "7.     Ak v == v_end, ukonči algoritmus\n"
+          "8.     Pre všetkých následníkov w vrcholu v:\n"
+          "9.         Ak g(w) > g(v) + d(v, w):\n"
+          "10.            g(w) ← g(v) + d(v, w)\n"
+          "11.            f(w) ← g(w) + heuristika(w, v_end)\n"
+          "12.            Pridať w do otvoreného zoznamu\n"
+          "Výstup: Najkratšia cesta"
         )
         self.display_pseudocode(pseudocode)
 
         source = simpledialog.askinteger("A* algoritmus", "Zadajte zdrojový uzol:")
+        root.update()
         target = simpledialog.askinteger("A* algoritmus", "Zadajte cieľový uzol:")
         if source not in self.graph.nodes or target not in self.graph.nodes:
             messagebox.showerror("Chyba", "Nesprávne uzly.")
@@ -790,11 +827,15 @@ class GraphVisualizerApp:
             messagebox.showerror("Chyba", "Medzi zadanými uzlami neexistuje cesta.")
 
     def run_kruskal(self):
+        self.clear_step_visualization()
         pseudocode = (
-            "Kruskalov algoritmus:\n"
-            "1. Zoradenie všetkých hrán podľa hodnoty\n"
-            "2. Pridanie hrany, ak nevznikne cyklus\n"
-            "3. Opakovanie, kým nie je MST dokončené"
+                "Vstup: Graf G\n"
+               "1. Inicializácia: Zoradiť hrany podľa váhy\n"
+               "2. Pre každú hranu (u, v) v poradí od najmenšej váhy:\n"
+               "3.     Ak u a v nie sú v tom istom komponente:\n"
+               "4.         Pridať hranu (u, v) do MST\n"
+               "5.         Zlúčiť komponenty u a v\n"
+               "Výstup: Minimálny kostrový strom (MST)"
         )
         self.display_pseudocode(pseudocode)
 
@@ -845,11 +886,16 @@ class GraphVisualizerApp:
         self.update_status("Kruskalov algoritmus pripravený na vizualizáciu.")
 
     def run_prim(self):
+        self.clear_step_visualization()
         pseudocode = (
-            "Primov algoritmus:\n"
-            "1. Vyberie sa ľubovoľný uzol\n"
-            "2. Postupne sa pridávajú najmenšie hrany vedúce k novým uzlom\n"
-            "3. Opakuje sa, kým nie sú zahrnuté všetky uzly"
+            "Vstup: Graf G\n"
+            "1. Vyberieme ľubovoľný počiatočný uzol v0\n"
+            "2. MST ← {v0}, hranový zoznam ← všetky hrany v0\n"
+            "3. Kým MST neobsahuje všetky uzly:\n"
+            "4.     Vyber hranu (u, v) s najmenšou váhou, kde u ∈ MST, v ∉ MST\n"
+            "5.     Pridať v do MST\n"
+            "6.     Pridať všetky nové hrany (v, x) do hranového zoznamu\n"
+            "Výstup: Minimálny kostrový strom (MST)"
         )
         self.display_pseudocode(pseudocode)
 
@@ -877,7 +923,7 @@ class GraphVisualizerApp:
             if v not in mst_nodes:
                 mst_nodes.add(v)
                 mst_edges.append((u, v))
-                step_details.append(f"Uzel {v} pridaný do MST.")
+                step_details.append(f"Uzol {v} pridaný do MST.")
                 for neighbor in self.graph.neighbors(v):
                     if neighbor not in mst_nodes:
                         edge_weight = self.graph[v][neighbor]['weight']
@@ -902,11 +948,14 @@ class GraphVisualizerApp:
         self.update_status("Primov algoritmus pripravený na vizualizáciu.")
 
     def run_kosaraju(self):
+        self.clear_step_visualization()
         pseudocode = (
-            "Kosarajuho algoritmus (pre orientované grafy):\n"
-            "1. Vykoná sa DFS a zaznamenajú sa časy ukončenia\n"
-            "2. Graf sa prevráti\n"
-            "3. Vykoná sa DFS v poradí klesajúcich časov ukončenia pre nájdenie silne súvislých komponentov"
+            "Vstup: Orientovaný graf G\n"
+                "1. Spustiť DFS a zaznamenať časy ukončenia uzlov\n"
+                "2. Prevrátiť všetky hrany v grafe G\n"
+                "3. Spustiť DFS na novom grafe podľa klesajúceho poradia ukončenia\n"
+                "4. Každá DFS návšteva tvorí jednu silne súvislú komponentu (SCC)\n"
+                "Výstup: Zoznam silne súvislých komponentov (SCC)"
         )
         self.display_pseudocode(pseudocode)
         if not self.is_directed:
@@ -1001,11 +1050,20 @@ class GraphVisualizerApp:
         self.update_status("Kosarajuho algoritmus pripravený na vizualizáciu.")
 
     def run_tarjan(self):
+        self.clear_step_visualization()
         pseudocode = (
-            "Tarjanov algoritmus (pre orientované grafy):\n"
-            "1. DFS pre každý uzol, priradenie indexov a low-link hodnôt\n"
-            "2. Použitie zásobníka na identifikáciu silne súvislých komponentov\n"
-            "3. Ak low-link uzla zodpovedá jeho indexu, vytvoria sa SCC"
+            "Vstup: Orientovaný graf G\n"
+              "1. Inicializácia indexov a low-link hodnôt pre všetky uzly\n"
+              "2. Spustiť DFS pre každý neobjavený uzol:\n"
+              "3.     Nastaviť index a low-link uzla\n"
+              "4.     Pridať uzol do zásobníka\n"
+              "5.     Pre všetkých následníkov w uzla:\n"
+              "6.         Ak w nie je navštívený, spustiť DFS(w) rekurzívne\n"
+              "7.         Aktualizovať low-link uzla podľa w\n"
+              "8.         Ak w je v zásobníku, aktualizovať low-link\n"
+              "9.     Ak low-link uzla je rovnaký ako jeho index:\n"
+              "10.        Vytvoriť SCC z uzlov v zásobníku\n"
+              "Výstup: Zoznam silne súvislých komponentov (SCC)"
         )
         self.display_pseudocode(pseudocode)
         if not self.is_directed:
@@ -1031,7 +1089,7 @@ class GraphVisualizerApp:
             self.algorithm_steps.append({
                 'highlight': [node],
                 'stack': stack.copy(),
-                'details': [f"Uzel {node} pridaný: index {indices[node]}, low-link {low_link[node]}"]
+                'details': [f"Uzol {node} pridaný: index {indices[node]}, low-link {low_link[node]}"]
             })
             for neighbor in self.graph.neighbors(node):
                 if neighbor not in indices:
@@ -1059,7 +1117,7 @@ class GraphVisualizerApp:
                 self.algorithm_steps.append({
                     'highlight': [node],
                     'stack': stack.copy(),
-                    'details': [f"Uzel {node} je koreňom SCC, začíname vytvárať SCC."]
+                    'details': [f"Uzol {node} je koreňom SCC, začíname vytvárať SCC."]
                 })
                 while True:
                     w = stack.pop()
@@ -1140,7 +1198,7 @@ class GraphVisualizerApp:
         tutorial_text.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         tutorial_message = (
             "Vitajte v interaktívnej vizualizácii grafových algoritmov!\n\n"
-            "Táto aplikácia bola vytvorená ako ultimátna učebná pomôcka pre študentov a učiteľov.\n\n"
+            "Predtým ako si vytvoríte alebo načítate graf zvolete si režim !!\n\n"
             "Ako ju používať:\n"
             "1. Vyberte si algoritmus z menu 'Algoritmy'. Algoritmy, ktoré vyžadujú orientovaný graf (Kosarajuho, Tarjanov), sa spustia len ak je prepnutý orientovaný režim.\n"
             "2. Ak algoritmus vyžaduje váhy (Dijkstrov, Bellman-Ford, A*), aplikácia overí, či sú váhy správne nastavené. Ak nie, zobrazí sa upozornenie a váhy sa deaktivujú (nebudú zobrazené).\n"

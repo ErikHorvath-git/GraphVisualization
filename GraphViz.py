@@ -22,6 +22,7 @@ class GraphVisualizerApp:
 
         # Inicializácia grafu a stavových premenných
         self.is_directed = False
+        self.show_edges = True
         self.graph = nx.Graph()
         self.positions = {}         # Pozície uzlov
         self.node_list = []         # Zoznam uzlov
@@ -40,9 +41,9 @@ class GraphVisualizerApp:
 
     def clear_step_visualization(self):
         """Vyčistí vizualizáciu dátovej štruktúry a detailný popis kroku."""
-        self.stack_listbox.delete(0, tk.END)  # Vyčistí zoznam dátovej štruktúry
+        self.stack_listbox.delete(0, tk.END)
         self.details_text.config(state=tk.NORMAL)
-        self.details_text.delete("1.0", tk.END)  # Vyčistí detailný popis kroku
+        self.details_text.delete("1.0", tk.END)
         self.details_text.config(state=tk.DISABLED)
 
     def create_widgets(self):
@@ -124,8 +125,6 @@ class GraphVisualizerApp:
             self.annot.set_visible(False)
             self.canvas.draw_idle()
             return
-
-        # Prah nastavený na 0.3 pre zvýšenú citlivosť
         threshold = 0.3
         vis = False
         if event.xdata is None or event.ydata is None:
@@ -283,29 +282,19 @@ class GraphVisualizerApp:
         messagebox.showinfo("O programe", about_message)
 
     def toggle_directed(self):
-        """
-        Prepína graf medzi orientovaným a neorientovaným režimom.
-        Pred prepnutím vymaže aktuálne zobrazený graf (uzly, hrany a pozície),
-        aby sa začalo s čistým grafom.
-        """
-        # Aktualizácia stavu orientácie na základe prepínača
         self.is_directed = self.directed_var.get()
         if self.is_directed:
             self.update_status("Prepnuté do orientovaného módu. Graf bol vymazaný.")
         else:
             self.update_status("Prepnuté do neorientovaného módu. Graf bol vymazaný.")
         
-        # Vymažeme aktuálny graf a všetky súvisiace údaje
         self.graph.clear()
         self.positions.clear()
         self.node_list.clear()
         self.edge_start_node = None
         self.add_node_mode = False
         self.add_edge_mode = False
-        
-        # Vykreslíme prázdny graf
         self.draw_graph()
-
 
     def add_node_mode_on(self):
         self.add_node_mode = True
@@ -343,7 +332,7 @@ class GraphVisualizerApp:
                     self.update_status(f"Zdrojový uzol {node_id} vybraný. Teraz vyberte cieľový uzol.")
                 else:
                     if node_id != self.edge_start_node:
-                        weight = simpledialog.askfloat("Hodnota hrany", "Zadajte hodnotu hrany:", minvalue=0.1)
+                        weight = simpledialog.askfloat("Hodnota hrany", "Zadajte hodnotu hrany:")
                         if weight is None:
                             weight = 1.0
                         self.graph.add_edge(self.edge_start_node, node_id, weight=weight)
@@ -358,7 +347,6 @@ class GraphVisualizerApp:
             pass
 
     def draw_graph(self, path=[]):
-        # Ak niektorý uzol nemá pozíciu, vygenerujeme layout
         if not self.positions or any(node not in self.positions for node in self.graph.nodes()):
             self.positions = nx.spring_layout(self.graph)
         self.ax.clear()
@@ -393,7 +381,6 @@ class GraphVisualizerApp:
                     self.graph,
                     self.positions,
                     ax=self.ax,
-                    connectionstyle='arc3,rad=0.1'
                 )
             nx.draw_networkx_labels(self.graph, self.positions, ax=self.ax)
             if self.show_weights:
@@ -402,7 +389,6 @@ class GraphVisualizerApp:
         self.canvas.draw()
 
     def check_weights(self):
-        """Skontroluje, či každá hrana obsahuje číselnú váhu. Ak nie, vráti False."""
         for u, v, data in self.graph.edges(data=True):
             if 'weight' not in data:
                 return False
@@ -418,11 +404,9 @@ class GraphVisualizerApp:
             self.ax.clear()
             self.ax.set_axis_on()
             self.ax.grid(True)
-            # Základné vykreslenie grafu
             nx.draw_networkx_nodes(self.graph, self.positions, ax=self.ax, node_color='skyblue', node_size=500)
             nx.draw_networkx_edges(self.graph, self.positions, ax=self.ax, edge_color='black', width=1)
             nx.draw_networkx_labels(self.graph, self.positions, ax=self.ax)
-            # Animácia hrán, ktoré aktualizovali – zelená
             updated_edges = new_step.get('updated_edges', [])
             if updated_edges:
                 width = 1 + 3 * frac
@@ -433,7 +417,6 @@ class GraphVisualizerApp:
                     edge_color='green',
                     width=width
                 )
-            # Animácia hrán, ktoré neaktualizovali – červená (šikmý štýl)
             no_update_edges = new_step.get('no_update_edges', [])
             if no_update_edges:
                 width = 1 + 3 * frac
@@ -482,10 +465,8 @@ class GraphVisualizerApp:
         self.ax.clear()
         self.ax.set_axis_on()
         self.ax.grid(True)
-        # Vykreslenie základného grafu
         nx.draw_networkx_nodes(self.graph, self.positions, ax=self.ax, node_color='skyblue', node_size=500)
         nx.draw_networkx_edges(self.graph, self.positions, ax=self.ax, edge_color='black', width=1)
-        # Vykreslenie hrán podľa kroku
         updated_edges = step.get('updated_edges', [])
         no_update_edges = step.get('no_update_edges', [])
         if updated_edges:
@@ -494,7 +475,6 @@ class GraphVisualizerApp:
         if no_update_edges:
             nx.draw_networkx_edges(self.graph, self.positions, ax=self.ax, edgelist=no_update_edges,
                                    edge_color='red', width=2, style='dashed')
-        # Zvýraznenie uzlov, ak je definované
         highlight = step.get('highlight', [])
         if highlight:
             nx.draw_networkx_nodes(self.graph, self.positions, nodelist=highlight, ax=self.ax,
@@ -503,7 +483,6 @@ class GraphVisualizerApp:
         if self.show_weights:
             edge_labels = nx.get_edge_attributes(self.graph, 'weight')
             nx.draw_networkx_edge_labels(self.graph, self.positions, edge_labels=edge_labels, ax=self.ax)
-        # Legenda
         import matplotlib.lines as mlines
         handles = []
         if updated_edges:
@@ -514,25 +493,26 @@ class GraphVisualizerApp:
             handles.append(red_line)
         if handles:
             self.ax.legend(handles=handles, loc='upper right')
-
-        self.update_stack_display(step.get('stack', []))
+        structure_type = step.get('structure_type', "")
+        self.update_stack_display(step.get('stack', []), structure_type)
         self.update_details_display(step.get('details', []))
         self.canvas.draw()
 
-    def update_stack_display(self, stack):
+    def update_stack_display(self, stack, structure_type=""):
         self.stack_listbox.delete(0, tk.END)
+        if structure_type:
+            self.stack_listbox.insert(tk.END, f"{structure_type}:")
+            self.stack_listbox.insert(tk.END, "-" * 20)
         for item in stack:
             if isinstance(item, tuple):
                 if len(item) == 3:
-                    weight, u, v = item
-                    self.stack_listbox.insert(tk.END, f"Hrana: ({u}->{v}), Hodnota: {weight}")
+                    self.stack_listbox.insert(tk.END, f"Hrana: ({item[1]}->{item[2]}), Hodnota: {item[0]}")
                 elif len(item) == 2:
-                    distance, node = item
-                    self.stack_listbox.insert(tk.END, f"Uzol: {node}, Vzdialenosť: {distance}")
+                    self.stack_listbox.insert(tk.END, f"Uzol: {item[1]}, Vzdialenosť: {item[0]}")
                 else:
-                    self.stack_listbox.insert(tk.END, f"{item}")
+                    self.stack_listbox.insert(tk.END, str(item))
             else:
-                self.stack_listbox.insert(tk.END, f"{item}")
+                self.stack_listbox.insert(tk.END, str(item))
 
     def update_details_display(self, details):
         self.details_text.config(state=tk.NORMAL)
@@ -579,9 +559,19 @@ class GraphVisualizerApp:
 
     # ----------------------- Implementácie algoritmov -----------------------
 
+    def contains_negative_edge(self):
+        for u, v, data in self.graph.edges(data=True):
+            weight = data.get('weight', 1)
+            if weight < 0:
+                return True
+        return False
+
     def run_dijkstra(self):
         self.clear_step_visualization()
-        # Pred spustením overíme, či sú váhy nastavené; ak nie, upozorníme používateľa
+        self.show_edges = True
+        if self.contains_negative_edge():
+            messagebox.showerror("Tento algoritmus nepracuje so zápornými hranami")
+            return
         if not self.check_weights():
             messagebox.showwarning("Upozornenie", "Nie všetky hrany majú nastavenú váhu. Váhy budú deaktivované pre tento algoritmus.")
             self.show_weights = False
@@ -589,27 +579,26 @@ class GraphVisualizerApp:
             self.show_weights = True
 
         pseudocode = (
-            "Vstup: Graf G a počiatočný vrchol v0\n" \
-            "1. Pre všetky vrcholy v:\n" \
-            "2. stav(v) ← nenájdený\n" \
-            "3. h(v) ← +∞\n" \
-            "4. P(v) ← nedefinované\n" \
-            "5. stav(v0) ← otvorený\n" \
-            "6. h(v0) ← 0\n" \
-            "7. Pokiaľ existujú nejaké otvorené vrcholy:\n" \
-            "8. Vybereme otvorený vrchol v, ktorého h(v) je najmenší.\n" \
-            "9. Pre všetkých následníkov w vrcholu v:\n" \
-            "10. Pokiaľ h(w) > h(v) + `(v, w):\n" \
-            "11. h(w) ← h(v) + `(v, w)\n" \
-            "12. stav(w) ← otvorený\n" \
-            "13. P(w) ← v\n" \
-            "14. stav(v) ← uzavrený\n" \
+            "Vstup: Graf G a počiatočný vrchol v0\n"
+            "1. Pre všetky vrcholy v:\n"
+            "2.     stav(v) ← nenájdený\n"
+            "3.     h(v) ← +∞\n"
+            "4.     P(v) ← nedefinované\n"
+            "5.     stav(v0) ← otvorený\n"
+            "6.     h(v0) ← 0\n"
+            "7. Pokiaľ existujú nejaké otvorené vrcholy:\n"
+            "8.     Vyberieme otvorený vrchol v s najmenším h(v)\n"
+            "9.     Pre všetkých následníkov w vrcholu v:\n"
+            "10.        Pokiaľ h(w) > h(v) + `(v, w):\n"
+            "11.             h(w) ← h(v) + `(v, w)\n"
+            "12.             stav(w) ← otvorený\n"
+            "13.             P(w) ← v\n"
+            "14.     stav(v) ← uzavrený\n"
             "Výstup: Pole vzdialeností h, pole predchodcov P"
         )
         self.display_pseudocode(pseudocode)
-
         source = simpledialog.askinteger("Dijkstrov algoritmus", "Zadajte zdrojový uzol:")
-        root.update()
+        self.master.update()
         target = simpledialog.askinteger("Dijkstrov algoritmus", "Zadajte cieľový uzol:")
         if source not in self.graph.nodes or target not in self.graph.nodes:
             messagebox.showerror("Chyba", "Nesprávne uzly.")
@@ -630,8 +619,8 @@ class GraphVisualizerApp:
             visited.add(current_node)
 
             step_details = []
-            updated_edges = []   # Hrany, ktoré aktualizovali – zelená
-            no_update_edges = [] # Hrany, ktoré neaktualizovali – červená
+            updated_edges = []
+            no_update_edges = []
             for neighbor in self.graph.neighbors(current_node):
                 weight = self.graph[current_node][neighbor].get('weight', 1)
                 new_distance = current_distance + weight
@@ -648,7 +637,8 @@ class GraphVisualizerApp:
                 'updated_edges': updated_edges,
                 'no_update_edges': no_update_edges,
                 'stack': priority_queue.copy(),
-                'details': step_details
+                'details': step_details,
+                'structure_type': "Prioritná fronta"
             })
 
         try:
@@ -658,7 +648,8 @@ class GraphVisualizerApp:
                 'updated_edges': path_edges,
                 'no_update_edges': [],
                 'stack': [],
-                'details': ["Finálna najkratšia cesta zvýraznená."]
+                'details': ["Finálna najkratšia cesta zvýraznená."],
+                'structure_type': ""
             })
             self.current_step_index = -1
             self.next_step_button.config(state=tk.NORMAL)
@@ -669,6 +660,7 @@ class GraphVisualizerApp:
 
     def run_bellman_ford(self):
         self.clear_step_visualization()
+        self.show_edges = True
         if not self.check_weights():
             messagebox.showwarning("Upozornenie", "Nie všetky hrany majú nastavenú váhu. Váhy budú deaktivované pre tento algoritmus.")
             self.show_weights = False
@@ -676,24 +668,23 @@ class GraphVisualizerApp:
             self.show_weights = True
 
         pseudocode = (
-                    "Vstup: Graf G a počiatočný vrchol v0\n"
-                    "1. Inicializácia vzdialeností: pre všetky vrcholy v\n"
-                    "2.     d(v) ← +∞\n"
-                    "3. d(v0) ← 0\n"
-                    "4. Pre |V| - 1 iterácií:\n"
-                    "5.     Pre každú hranu (u, v) s váhou w:\n"
-                    "6.         Ak d(u) + w < d(v):\n"
-                    "7.             d(v) ← d(u) + w\n"
-                    "8. Na kontrolu záporných cyklov:\n"
-                    "9.     Pre každú hranu (u, v) s váhou w:\n"
-                    "10.        Ak d(u) + w < d(v):\n"
-                    "11.            Detekovaný záporný cyklus!\n"
-                    "Výstup: Pole vzdialeností d"
+            "Vstup: Graf G a počiatočný uzol v0\n"
+            "1. Inicializácia vzdialeností: pre všetky vrcholy v\n"
+            "2.     d(v) ← +∞\n"
+            "3.     d(v0) ← 0\n"
+            "4. Pre |V| - 1 iterácií:\n"
+            "5.     Pre každú hranu (u, v) s váhou w:\n"
+            "6.         Ak d(u) + w < d(v):\n"
+            "7.             d(v) ← d(u) + w\n"
+            "8. Na kontrolu záporných cyklov:\n"
+            "9.     Pre každú hranu (u, v) s váhou w:\n"
+            "10.        Ak d(u) + w < d(v):\n"
+            "11.            Detekovaný záporný cyklus!\n"
+            "Výstup: Pole vzdialeností d"
         )
         self.display_pseudocode(pseudocode)
-
         source = simpledialog.askinteger("Bellman-Fordov algoritmus", "Zadajte zdrojový uzol:")
-        root.update()
+        self.master.update()
         target = simpledialog.askinteger("Bellman-Fordov algoritmus", "Zadajte cieľový uzol:")
         if source not in self.graph.nodes or target not in self.graph.nodes:
             messagebox.showerror("Chyba", "Nesprávne uzly.")
@@ -720,32 +711,61 @@ class GraphVisualizerApp:
             self.algorithm_steps.append({
                 'edges': step_edges,
                 'stack': edges.copy(),
-                'details': step_details
+                'details': step_details,
+                'structure_type': "Prioritná fronta"
             })
 
-        step_details = ["Kontrola negatívnych cyklov:"]
+        step_details = ["Kontrola záporných cyklov:"]
+        negative_cycle = False
         for u, v, data in edges:
             weight = data.get('weight', 1)
             if distances[u] + weight < distances[v]:
                 step_details.append(f"Negatívny cyklus detekovaný na hrane ({u}->{v})")
+                negative_cycle = True
                 break
-        else:
+        if not negative_cycle:
             step_details.append("Negatívne cykly nenájdené.")
+        self.algorithm_steps.append({
+            'edges': [],
+            'stack': [],
+            'details': step_details,
+            'structure_type': ""
+        })
 
-        self.algorithm_steps.append({'edges': [], 'stack': [], 'details': step_details})
+        if negative_cycle:
+            messagebox.showerror("Chyba", "Negatívny cyklus detekovaný! Algoritmus nemôže pokračovať.")
+            self.update_status("Negatívny cyklus detekovaný!")
+            return
+
         try:
             path = nx.bellman_ford_path(self.graph, source=source, target=target, weight='weight')
             path_edges = list(zip(path, path[1:]))
-            self.algorithm_steps.append({'edges': path_edges, 'stack': [], 'details': ["Finálna najkratšia cesta zvýraznená."]})
-            self.current_step_index = -1
-            self.next_step_button.config(state=tk.NORMAL)
-            self.prev_step_button.config(state=tk.DISABLED)
-            self.update_status("Bellman-Fordov algoritmus pripravený na vizualizáciu.")
+            self.algorithm_steps.append({
+                'edges': path_edges,
+                'stack': [],
+                'details': ["Finálna najkratšia cesta zvýraznená."],
+                'structure_type': "iteruje cez všetky hrany v každej iterácii bez použitia prioritnej fronty alebo zásobníku"
+            })
+        except nx.NetworkXUnbounded:
+            messagebox.showerror("Chyba", "Negatívny cyklus detekovaný! Algoritmus nemôže pokračovať.")
+            self.update_status("Negatívny cyklus detekovaný!")
+            return
         except nx.NetworkXNoPath:
             messagebox.showerror("Chyba", "Medzi zadanými uzlami neexistuje cesta.")
+            self.update_status("Medzi zadanými uzlami neexistuje cesta.")
+            return
+
+        self.current_step_index = -1
+        self.next_step_button.config(state=tk.NORMAL)
+        self.prev_step_button.config(state=tk.DISABLED)
+        self.update_status("Bellman-Fordov algoritmus pripravený na vizualizáciu.")
 
     def run_astar(self):
+        self.show_edges = True
         self.clear_step_visualization()
+        if self.contains_negative_edge():
+            messagebox.showerror("Tento algoritmus nepracuje so zápornými hranami")
+            return
         if not self.check_weights():
             messagebox.showwarning("Upozornenie", "Nie všetky hrany majú nastavenú váhu. Váhy budú deaktivované pre tento algoritmus.")
             self.show_weights = False
@@ -769,9 +789,8 @@ class GraphVisualizerApp:
           "Výstup: Najkratšia cesta"
         )
         self.display_pseudocode(pseudocode)
-
         source = simpledialog.askinteger("A* algoritmus", "Zadajte zdrojový uzol:")
-        root.update()
+        self.master.update()
         target = simpledialog.askinteger("A* algoritmus", "Zadajte cieľový uzol:")
         if source not in self.graph.nodes or target not in self.graph.nodes:
             messagebox.showerror("Chyba", "Nesprávne uzly.")
@@ -812,13 +831,14 @@ class GraphVisualizerApp:
                 'updated_edges': updated_edges,
                 'no_update_edges': no_update_edges,
                 'stack': open_list.copy(),
-                'details': step_details
+                'details': step_details,
+                'structure_type': "Prioritná fronta"
             })
 
         try:
             path = nx.astar_path(self.graph, source, target, heuristic=self.heuristic, weight='weight')
             path_edges = list(zip(path, path[1:]))
-            self.algorithm_steps.append({'updated_edges': path_edges, 'no_update_edges': [], 'stack': [], 'details': ["Finálna najkratšia cesta zvýraznená."]})
+            self.algorithm_steps.append({'updated_edges': path_edges, 'no_update_edges': [], 'stack': [], 'details': ["Finálna najkratšia cesta zvýraznená."], 'structure_type': ""})
             self.current_step_index = -1
             self.next_step_button.config(state=tk.NORMAL)
             self.prev_step_button.config(state=tk.DISABLED)
@@ -827,7 +847,12 @@ class GraphVisualizerApp:
             messagebox.showerror("Chyba", "Medzi zadanými uzlami neexistuje cesta.")
 
     def run_kruskal(self):
+        self.show_edges = True
         self.clear_step_visualization()
+        if self.contains_negative_edge():
+            messagebox.showerror("Tento algoritmus nepracuje so zápornými hranami")
+            return
+
         pseudocode = (
                 "Vstup: Graf G\n"
                "1. Inicializácia: Zoradiť hrany podľa váhy\n"
@@ -872,13 +897,15 @@ class GraphVisualizerApp:
             self.algorithm_steps.append({
                 'edges': mst_edges.copy(),
                 'stack': edges,
-                'details': step_details
+                'details': step_details,
+                'structure_type': "Zoznam hrán"
             })
 
         self.algorithm_steps.append({
             'edges': mst_edges.copy(),
             'stack': [],
-            'details': ["Kruskalov algoritmus dokončený. Finálne MST zostavené."]
+            'details': ["Kruskalov algoritmus dokončený. Finálne MST zostavené."],
+            'structure_type': " union-find štruktúra"
         })
         self.current_step_index = -1
         self.next_step_button.config(state=tk.NORMAL)
@@ -887,6 +914,11 @@ class GraphVisualizerApp:
 
     def run_prim(self):
         self.clear_step_visualization()
+        self.show_edges = True
+        if self.contains_negative_edge():
+            messagebox.showerror("Tento algoritmus nepracuje so zápornými hranami")
+            return
+
         pseudocode = (
             "Vstup: Graf G\n"
             "1. Vyberieme ľubovoľný počiatočný uzol v0\n"
@@ -913,7 +945,8 @@ class GraphVisualizerApp:
         self.algorithm_steps.append({
             'edges': mst_edges.copy(),
             'stack': priority_queue.copy(),
-            'details': [f"Začiatok v uzle {start_node}", f"Počiatočné hrany: {priority_queue}"]
+            'details': [f"Začiatok v uzle {start_node}", f"Počiatočné hrany: {priority_queue}"],
+            'structure_type': "Prioritná fronta"
         })
 
         while priority_queue:
@@ -934,13 +967,15 @@ class GraphVisualizerApp:
             self.algorithm_steps.append({
                 'edges': mst_edges.copy(),
                 'stack': priority_queue.copy(),
-                'details': step_details
+                'details': step_details,
+                'structure_type': "Prioritná fronta"
             })
 
         self.algorithm_steps.append({
             'edges': mst_edges.copy(),
             'stack': [],
-            'details': ["Primov algoritmus dokončený. Finálne MST zostavené."]
+            'details': ["Primov algoritmus dokončený. Finálne MST zostavené."],
+            'structure_type': ""
         })
         self.current_step_index = -1
         self.next_step_button.config(state=tk.NORMAL)
@@ -949,13 +984,14 @@ class GraphVisualizerApp:
 
     def run_kosaraju(self):
         self.clear_step_visualization()
+        self.show_edges = False
         pseudocode = (
             "Vstup: Orientovaný graf G\n"
-                "1. Spustiť DFS a zaznamenať časy ukončenia uzlov\n"
-                "2. Prevrátiť všetky hrany v grafe G\n"
-                "3. Spustiť DFS na novom grafe podľa klesajúceho poradia ukončenia\n"
-                "4. Každá DFS návšteva tvorí jednu silne súvislú komponentu (SCC)\n"
-                "Výstup: Zoznam silne súvislých komponentov (SCC)"
+            "1. Spustiť DFS a zaznamenať časy ukončenia uzlov\n"
+            "2. Prevrátiť všetky hrany v grafe G\n"
+            "3. Spustiť DFS na novom grafe podľa klesajúceho poradia ukončenia\n"
+            "4. Každá DFS návšteva tvorí jednu silne súvislú komponentu (SCC)\n"
+            "Výstup: Zoznam silne súvislých komponentov (SCC)"
         )
         self.display_pseudocode(pseudocode)
         if not self.is_directed:
@@ -972,7 +1008,8 @@ class GraphVisualizerApp:
             self.algorithm_steps.append({
                 'highlight': [node],
                 'stack': finish_stack.copy(),
-                'details': [f"Fáza 1: Návšteva uzla {node}"]
+                'details': [f"Fáza 1: Návšteva uzla {node}"],
+                'structure_type': "Zásobník"
             })
             for neighbor in self.graph.neighbors(node):
                 if neighbor not in visited:
@@ -981,7 +1018,8 @@ class GraphVisualizerApp:
             self.algorithm_steps.append({
                 'highlight': [node],
                 'stack': finish_stack.copy(),
-                'details': [f"Fáza 1: Uzol {node} dokončený, pridaný do zásobníka"]
+                'details': [f"Fáza 1: Uzol {node} dokončený, pridaný do zásobníka"],
+                'structure_type': ""
             })
 
         for node in list(self.graph.nodes()):
@@ -997,7 +1035,8 @@ class GraphVisualizerApp:
         self.algorithm_steps.append({
             'highlight': [],
             'stack': finish_stack.copy(),
-            'details': ["Graf prevrátený pre Fázu 2."]
+            'details': ["Graf prevrátený pre Fázu 2."],
+            'structure_type': "Zásobník"
         })
 
         visited.clear()
@@ -1010,7 +1049,8 @@ class GraphVisualizerApp:
                 self.algorithm_steps.append({
                     'highlight': [node],
                     'stack': stack.copy(),
-                    'details': [f"Fáza 3: DFS z uzla {node} v prevrátenom grafe"]
+                    'details': [f"Fáza 3: DFS z uzla {node} v prevrátenom grafe"],
+                    'structure_type': "Zásobník"
                 })
                 while stack:
                     current = stack.pop()
@@ -1020,7 +1060,8 @@ class GraphVisualizerApp:
                         self.algorithm_steps.append({
                             'highlight': [current],
                             'stack': stack.copy(),
-                            'details': [f"Návšteva uzla {current}"]
+                            'details': [f"Návšteva uzla {current}"],
+                            'structure_type': "Zásobník"
                         })
                         for neighbor in reversed_graph.neighbors(current):
                             if neighbor not in visited:
@@ -1028,21 +1069,23 @@ class GraphVisualizerApp:
                                 self.algorithm_steps.append({
                                     'highlight': [neighbor],
                                     'stack': stack.copy(),
-                                    'details': [f"Pridaný sused {neighbor} do zásobníka"]
+                                    'details': [f"Pridaný sused {neighbor} do zásobníka"],
+                                    'structure_type': "Zásobník"
                                 })
                 sccs.append(scc)
                 self.algorithm_steps.append({
                     'highlight': scc,
                     'stack': stack.copy(),
-                    'details': [f"Zistený silne súvislý komponent: {scc}"]
+                    'details': [f"Zistený silne súvislý komponent: {scc}"],
+                    'structure_type': "Zásobník"
                 })
 
-        # Vyfarbenie výsledných komponentov
         self.draw_scc(sccs)
         self.algorithm_steps.append({
             'highlight': [],
             'stack': [],
-            'details': [f"Kosarajuho algoritmus dokončený. Silne súvislé komponenty: {sccs}"]
+            'details': [f"Kosarajuho algoritmus dokončený. Silne súvislé komponenty: {sccs}"],
+            'structure_type': ""
         })
         self.current_step_index = -1
         self.next_step_button.config(state=tk.NORMAL)
@@ -1051,19 +1094,20 @@ class GraphVisualizerApp:
 
     def run_tarjan(self):
         self.clear_step_visualization()
+        self.show_edges = False
         pseudocode = (
             "Vstup: Orientovaný graf G\n"
-              "1. Inicializácia indexov a low-link hodnôt pre všetky uzly\n"
-              "2. Spustiť DFS pre každý neobjavený uzol:\n"
-              "3.     Nastaviť index a low-link uzla\n"
-              "4.     Pridať uzol do zásobníka\n"
-              "5.     Pre všetkých následníkov w uzla:\n"
-              "6.         Ak w nie je navštívený, spustiť DFS(w) rekurzívne\n"
-              "7.         Aktualizovať low-link uzla podľa w\n"
-              "8.         Ak w je v zásobníku, aktualizovať low-link\n"
-              "9.     Ak low-link uzla je rovnaký ako jeho index:\n"
-              "10.        Vytvoriť SCC z uzlov v zásobníku\n"
-              "Výstup: Zoznam silne súvislých komponentov (SCC)"
+            "1. Inicializácia indexov a low-link hodnôt pre všetky uzly\n"
+            "2. Spustiť DFS pre každý neobjavený uzol:\n"
+            "3.     Nastaviť index a low-link uzla\n"
+            "4.     Pridať uzol do zásobníka\n"
+            "5.     Pre všetkých následníkov w uzla:\n"
+            "6.         Ak w nie je navštívený, spustiť DFS(w) rekurzívne\n"
+            "7.         Aktualizovať low-link uzla podľa w\n"
+            "8.         Ak w je v zásobníku, aktualizovať low-link\n"
+            "9.     Ak low-link uzla je rovnaký ako jeho index:\n"
+            "10.        Vytvoriť SCC z uzlov v zásobníku\n"
+            "Výstup: Zoznam silne súvislých komponentov (SCC)"
         )
         self.display_pseudocode(pseudocode)
         if not self.is_directed:
@@ -1089,35 +1133,40 @@ class GraphVisualizerApp:
             self.algorithm_steps.append({
                 'highlight': [node],
                 'stack': stack.copy(),
-                'details': [f"Uzol {node} pridaný: index {indices[node]}, low-link {low_link[node]}"]
+                'details': [f"Uzol {node} pridaný: index {indices[node]}, low-link {low_link[node]}"],
+                'structure_type': "Zásobník"
             })
             for neighbor in self.graph.neighbors(node):
                 if neighbor not in indices:
                     self.algorithm_steps.append({
                         'highlight': [neighbor],
                         'stack': stack.copy(),
-                        'details': [f"Prechod na suseda {neighbor} z uzla {node}"]
+                        'details': [f"Prechod na suseda {neighbor} z uzla {node}"],
+                        'structure_type': "Zásobník"
                     })
                     strong_connect(neighbor)
                     low_link[node] = min(low_link[node], low_link[neighbor])
                     self.algorithm_steps.append({
                         'highlight': [node],
                         'stack': stack.copy(),
-                        'details': [f"Aktualizácia low-link {node} na {low_link[node]} po návšteve {neighbor}"]
+                        'details': [f"Aktualizácia low-link {node} na {low_link[node]} po návšteve {neighbor}"],
+                        'structure_type': "Zásobník"
                     })
                 elif neighbor in on_stack:
                     low_link[node] = min(low_link[node], indices[neighbor])
                     self.algorithm_steps.append({
                         'highlight': [node, neighbor],
                         'stack': stack.copy(),
-                        'details': [f"Sused {neighbor} v zásobníku: aktualizácia low-link {node} na {low_link[node]}"]
+                        'details': [f"Sused {neighbor} v zásobníku: aktualizácia low-link {node} na {low_link[node]}"],
+                        'structure_type': "Zásobník"
                     })
             if low_link[node] == indices[node]:
                 scc = []
                 self.algorithm_steps.append({
                     'highlight': [node],
                     'stack': stack.copy(),
-                    'details': [f"Uzol {node} je koreňom SCC, začíname vytvárať SCC."]
+                    'details': [f"Uzol {node} je koreňom SCC, začíname vytvárať SCC."],
+                    'structure_type': "Zásobník"
                 })
                 while True:
                     w = stack.pop()
@@ -1126,7 +1175,8 @@ class GraphVisualizerApp:
                     self.algorithm_steps.append({
                         'highlight': [w],
                         'stack': stack.copy(),
-                        'details': [f"Vyradený uzol {w} zo zásobníka, aktuálne SCC: {scc}"]
+                        'details': [f"Vyradený uzol {w} zo zásobníka, aktuálne SCC: {scc}"],
+                        'structure_type': "Zásobník"
                     })
                     if w == node:
                         break
@@ -1134,19 +1184,20 @@ class GraphVisualizerApp:
                 self.algorithm_steps.append({
                     'highlight': scc,
                     'stack': stack.copy(),
-                    'details': [f"SCC dokončené: {scc}"]
+                    'details': [f"SCC dokončené: {scc}"],
+                    'structure_type': "Zásobník"
                 })
 
         for node in list(self.graph.nodes()):
             if node not in indices:
                 strong_connect(node)
 
-        # Vyfarbenie výsledných silne súvislých komponentov
         self.draw_scc(sccs)
         self.algorithm_steps.append({
             'highlight': [],
             'stack': [],
-            'details': [f"Tarjanov algoritmus dokončený. Silne súvislé komponenty: {sccs}"]
+            'details': [f"Tarjanov algoritmus dokončený. Silne súvislé komponenty: {sccs}"],
+            'structure_type': ""
         })
         self.current_step_index = -1
         self.next_step_button.config(state=tk.NORMAL)
@@ -1183,14 +1234,12 @@ class GraphVisualizerApp:
             connectionstyle='arc3,rad=0.1'
         )
         nx.draw_networkx_labels(self.graph, self.positions, ax=self.ax)
-        # Ak váhy sú povolené, vykreslíme ich; inak nie
         if self.show_weights:
             edge_labels = nx.get_edge_attributes(self.graph, 'weight')
             nx.draw_networkx_edge_labels(self.graph, self.positions, edge_labels=edge_labels, ax=self.ax)
         self.canvas.draw()
 
     def show_tutorial(self):
-        # Otvorí nové okno s detailným tutoriálom a vysvetlením
         tutorial_win = tk.Toplevel(self.master)
         tutorial_win.title("Tutorial – Ako fungujú grafové algoritmy")
         tutorial_win.geometry("800x600")
@@ -1198,7 +1247,7 @@ class GraphVisualizerApp:
         tutorial_text.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         tutorial_message = (
             "Vitajte v interaktívnej vizualizácii grafových algoritmov!\n\n"
-            "Predtým ako si vytvoríte alebo načítate graf zvolete si režim !!\n\n"
+            "Predtým ako si vytvoríte alebo načítate graf zvoľte si režim.\n\n"
             "Ako ju používať:\n"
             "1. Vyberte si algoritmus z menu 'Algoritmy'. Algoritmy, ktoré vyžadujú orientovaný graf (Kosarajuho, Tarjanov), sa spustia len ak je prepnutý orientovaný režim.\n"
             "2. Ak algoritmus vyžaduje váhy (Dijkstrov, Bellman-Ford, A*), aplikácia overí, či sú váhy správne nastavené. Ak nie, zobrazí sa upozornenie a váhy sa deaktivujú (nebudú zobrazené).\n"

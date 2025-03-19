@@ -3,9 +3,9 @@ from tkinter import ttk, messagebox, simpledialog, filedialog
 import networkx as nx
 import matplotlib
 import math
+import gzip
 from show_grafy import get_sample_graph_1, get_sample_graph_2, get_directed_graph, get_complex_graph
 
-# Používame TkAgg backend pre Matplotlib
 matplotlib.use('TkAgg')
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
@@ -14,48 +14,39 @@ class GraphVisualizerApp:
     def __init__(self, master):
         self.master = master
         self.master.title("Vizualizácia grafových algoritmov – bakalárska práca")
-        self.master.geometry("1300x750")  # Predvolená veľkosť okna
+        self.master.geometry("1300x750")  
 
-        # Nastavenie modernej ttk témy
         style = ttk.Style()
         style.theme_use('clam')
 
-        # Inicializácia grafu a stavových premenných
         self.is_directed = False
         self.show_edges = True
         self.graph = nx.Graph()
-        self.positions = {}         # Pozície uzlov
-        self.node_list = []         # Zoznam uzlov
-        self.current_step_index = -1  # Index aktuálneho kroku animácie
-        self.algorithm_steps = []   # Uložené kroky pre animáciu
+        self.positions = {}         
+        self.node_list = []         
+        self.current_step_index = -1  
+        self.algorithm_steps = []   
 
-        # Flag pre zobrazenie váh (ak sú korektne nastavené)
         self.show_weights = True
-
-        # Stavy pre interaktívne pridávanie uzlov/hrán
+        self.node_id = 0
         self.add_node_mode = False
         self.add_edge_mode = False
         self.edge_start_node = None
-
         self.create_widgets()
 
     def clear_step_visualization(self):
-        """Vyčistí vizualizáciu dátovej štruktúry a detailný popis kroku."""
         self.stack_listbox.delete(0, tk.END)
         self.details_text.config(state=tk.NORMAL)
         self.details_text.delete("1.0", tk.END)
         self.details_text.config(state=tk.DISABLED)
 
     def create_widgets(self):
-        # Paned window rozdeľujúce postranný panel a hlavnú oblasť
         self.paned_window = ttk.PanedWindow(self.master, orient=tk.HORIZONTAL)
         self.paned_window.pack(fill=tk.BOTH, expand=True)
 
-        # Postranný panel s ovládacími prvkami, pseudokódom a detailným vysvetlením
         self.sidebar = ttk.Frame(self.paned_window, width=320, padding=10)
         self.paned_window.add(self.sidebar, weight=0)
 
-        # Hlavná oblasť pre vizualizáciu grafu
         self.main_area = ttk.Frame(self.paned_window, padding=10)
         self.paned_window.add(self.main_area, weight=1)
 
@@ -66,20 +57,17 @@ class GraphVisualizerApp:
         self.create_status_bar()
 
     def create_sidebar_components(self):
-        # Pseudokód a vysvetlenie algoritmu
         pseudocode_label = ttk.Label(self.sidebar, text="Pseudokód", font=("Arial", 12, "bold"))
         pseudocode_label.pack(anchor=tk.W, pady=(0, 5))
         self.pseudocode_area = tk.Text(self.sidebar, wrap=tk.WORD, height=10, width=40, background="#F5F5F5")
         self.pseudocode_area.pack(fill=tk.X, pady=(0, 10))
         self.pseudocode_area.config(state=tk.DISABLED)
 
-        # Vizualizácia dátovej štruktúry (napr. fronta alebo zásobník)
         stack_label = ttk.Label(self.sidebar, text="Vizualizácia dátovej štruktúry", font=("Arial", 12, "bold"))
         stack_label.pack(anchor=tk.W, pady=(0, 5))
         self.stack_listbox = tk.Listbox(self.sidebar, height=10, width=40)
         self.stack_listbox.pack(fill=tk.BOTH, pady=(0, 10))
 
-        # Detailný popis aktuálneho kroku
         details_label = ttk.Label(self.sidebar, text="Detailný popis kroku", font=("Arial", 12, "bold"))
         details_label.pack(anchor=tk.W, pady=(0, 5))
         self.details_text = tk.Text(self.sidebar, wrap=tk.WORD, height=10, width=40, background="#F5F5F5")
@@ -87,7 +75,6 @@ class GraphVisualizerApp:
         self.details_text.config(state=tk.DISABLED)
 
     def create_canvas(self):
-        # Nastavenie Matplotlib figúry a osi
         self.figure = plt.Figure(figsize=(6, 4))
         self.ax = self.figure.add_subplot(111)
         self.ax.set_axis_on()
@@ -98,12 +85,10 @@ class GraphVisualizerApp:
         self.ax.set_xlim(self.fixed_limits[0], self.fixed_limits[1])
         self.ax.set_ylim(self.fixed_limits[2], self.fixed_limits[3])
 
-        # Vloženie figúry do Tkinter canvasu
         self.canvas = FigureCanvasTkAgg(self.figure, self.main_area)
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
-        # Anotácia pre hover – tooltip
         self.annot = self.ax.annotate("", xy=(0, 0), xytext=(10, 10),
                                       textcoords="offset points",
                                       bbox=dict(boxstyle="round", fc="w"),
@@ -113,14 +98,12 @@ class GraphVisualizerApp:
         self.canvas.mpl_connect("button_press_event", self.on_canvas_click)
         self.canvas.mpl_connect("pick_event", self.on_pick)
 
-        # Kontextové menu
         self.canvas.get_tk_widget().bind("<Button-3>", self.show_context_menu)
         self.context_menu = tk.Menu(self.master, tearoff=0)
         self.context_menu.add_command(label="Zmazať uzol", command=self.delete_node)
         self.context_menu.add_command(label="Zmazať hranu", command=self.delete_edge)
 
     def on_hover(self, event):
-        # Ak kurzor nie je v rámci osi, skry tooltip
         if event.inaxes != self.ax:
             self.annot.set_visible(False)
             self.canvas.draw_idle()
@@ -150,7 +133,6 @@ class GraphVisualizerApp:
     def create_menu(self):
         menubar = tk.Menu(self.master)
 
-        # Súborové menu
         file_menu = tk.Menu(menubar, tearoff=0)
         file_menu.add_command(label="Nový graf", command=self.new_graph)
         file_menu.add_command(label="Otvoriť graf...", command=self.open_graph)
@@ -164,7 +146,6 @@ class GraphVisualizerApp:
         file_menu.add_command(label="Načítať orientovaný graf 2", command=lambda: self.load_sample_graph(get_complex_graph))
         menubar.add_cascade(label="Súbor", menu=file_menu)
 
-        # Menu algoritmov
         algorithms_menu = tk.Menu(menubar, tearoff=0)
         algorithms_menu.add_command(label="Dijkstrov algoritmus", command=self.run_dijkstra)
         algorithms_menu.add_command(label="Bellman-Fordov algoritmus", command=self.run_bellman_ford)
@@ -175,13 +156,11 @@ class GraphVisualizerApp:
         algorithms_menu.add_command(label="Tarjanov algoritmus", command=self.run_tarjan)
         menubar.add_cascade(label="Algoritmy", menu=algorithms_menu)
 
-        # Menu zobrazenia
         view_menu = tk.Menu(menubar, tearoff=0)
         self.directed_var = tk.BooleanVar(value=False)
         view_menu.add_checkbutton(label="Orientovaný graf", variable=self.directed_var, command=self.toggle_directed)
         menubar.add_cascade(label="Režim", menu=view_menu)
 
-        # Pomoc
         help_menu = tk.Menu(menubar, tearoff=0)
         help_menu.add_command(label="O programe", command=self.show_about)
         menubar.add_cascade(label="Pomoc", menu=help_menu)
@@ -285,6 +264,8 @@ class GraphVisualizerApp:
         self.is_directed = self.directed_var.get()
         if self.is_directed:
             self.update_status("Prepnuté do orientovaného módu. Graf bol vymazaný.")
+            self.graph = nx.DiGraph()  
+
         else:
             self.update_status("Prepnuté do neorientovaného módu. Graf bol vymazaný.")
         
@@ -310,41 +291,68 @@ class GraphVisualizerApp:
         self.master.config(cursor="tcross")
         self.update_status("Najprv vyberte zdrojový uzol, potom cieľový uzol.")
 
+    
     def on_canvas_click(self, event):
         if event.xdata is None or event.ydata is None:
             return
         if self.add_node_mode:
-            node_id = len(self.graph.nodes) + 1
-            self.graph.add_node(node_id)
-            self.positions[node_id] = (event.xdata, event.ydata)
+            if not self.graph.nodes:
+                self.node_id = 1 
+            else:
+                self.node_id = max(self.graph.nodes) + 1  
+
+            self.graph.add_node(self.node_id)
+            self.positions[self.node_id] = (event.xdata, event.ydata)
+
             self.draw_graph()
+
             self.add_node_mode = False
             self.master.config(cursor="")
-            self.update_status(f"Uzol {node_id} pridaný.")
+
+            self.update_status(f"Uzol {self.node_id} pridaný.")
+
 
     def on_pick(self, event):
         if self.add_edge_mode:
-            ind = event.ind[0] if hasattr(event, 'ind') and event.ind else None
-            if ind is not None and self.node_list:
-                node_id = self.node_list[ind]
-                if self.edge_start_node is None:
-                    self.edge_start_node = node_id
-                    self.update_status(f"Zdrojový uzol {node_id} vybraný. Teraz vyberte cieľový uzol.")
+            if event.mouseevent.xdata is None or event.mouseevent.ydata is None:
+                return
+
+            min_dist = float("inf")
+            selected_node = None
+            threshold = 0.3  
+
+            for node, pos in self.positions.items():
+                dx = pos[0] - event.mouseevent.xdata
+                dy = pos[1] - event.mouseevent.ydata
+                dist = math.hypot(dx, dy)
+
+                if dist < min_dist and dist < threshold:
+                    min_dist = dist
+                    selected_node = node
+
+            if selected_node is None:
+                return
+
+            if self.edge_start_node is None:
+                self.edge_start_node = selected_node
+                self.update_status(f"Zdrojový uzol {selected_node} vybraný. Teraz vyberte cieľový uzol.")
+            else:
+                if selected_node != self.edge_start_node:
+                    weight = simpledialog.askfloat("Hodnota hrany", "Zadajte hodnotu hrany:")
+                    if weight is None:
+                        weight = 1.0
+                
+                    self.graph.add_edge(self.edge_start_node, selected_node, weight=weight)
+
+                    self.update_status(f"Hrana medzi uzlami {self.edge_start_node} a {selected_node} pridaná.")
+                    self.draw_graph()
                 else:
-                    if node_id != self.edge_start_node:
-                        weight = simpledialog.askfloat("Hodnota hrany", "Zadajte hodnotu hrany:")
-                        if weight is None:
-                            weight = 1.0
-                        self.graph.add_edge(self.edge_start_node, node_id, weight=weight)
-                        self.update_status(f"Hrana medzi uzlami {self.edge_start_node} a {node_id} pridaná.")
-                        self.draw_graph()
-                    else:
-                        messagebox.showwarning("Upozornenie", "Nemôžete vytvoriť hranu zo samotného seba.")
-                    self.edge_start_node = None
-                    self.add_edge_mode = False
-                    self.master.config(cursor="")
-        else:
-            pass
+                    messagebox.showwarning("Upozornenie", "Nemôžete vytvoriť hranu zo samotného seba.")
+
+                self.edge_start_node = None
+                self.add_edge_mode = False
+                self.master.config(cursor="")
+
 
     def draw_graph(self, path=[]):
         if not self.positions or any(node not in self.positions for node in self.graph.nodes()):
@@ -661,6 +669,7 @@ class GraphVisualizerApp:
     def run_bellman_ford(self):
         self.clear_step_visualization()
         self.show_edges = True
+
         if not self.check_weights():
             messagebox.showwarning("Upozornenie", "Nie všetky hrany majú nastavenú váhu. Váhy budú deaktivované pre tento algoritmus.")
             self.show_weights = False
@@ -683,82 +692,108 @@ class GraphVisualizerApp:
             "Výstup: Pole vzdialeností d"
         )
         self.display_pseudocode(pseudocode)
+
         source = simpledialog.askinteger("Bellman-Fordov algoritmus", "Zadajte zdrojový uzol:")
         self.master.update()
         target = simpledialog.askinteger("Bellman-Fordov algoritmus", "Zadajte cieľový uzol:")
+
         if source not in self.graph.nodes or target not in self.graph.nodes:
             messagebox.showerror("Chyba", "Nesprávne uzly.")
             return
 
         self.draw_graph()
         self.algorithm_steps = []
+
         distances = {node: float('inf') for node in self.graph.nodes}
         distances[source] = 0
         edges = list(self.graph.edges(data=True))
 
         for i in range(len(self.graph.nodes) - 1):
-            step_details = [f"Iterácia {i+1}:"]
-            step_edges = []
+            step_details = [f"Iterácia {i+1}: Relaxácia hrán"]
+            updated_edges = []
+            no_update_edges = []
+            updated = False  
+
             for u, v, data in edges:
                 weight = data.get('weight', 1)
-                step_details.append(f"Hrana ({u}->{v}), hodnota {weight}")
-                if distances[u] + weight < distances[v]:
+                step_details.append(f"➡️ Kontrola hrany ({u} → {v}), váha {weight}")
+
+                if distances[u] != float('inf') and distances[u] + weight < distances[v]:
                     distances[v] = distances[u] + weight
-                    step_details.append(f"Aktualizácia: vzdialenosť {v} = {distances[v]}")
-                    step_edges.append((u, v))
+                    step_details.append(f"Aktualizácia: d({v}) = {distances[v]}")
+                    updated_edges.append((u, v))
+                    updated = True
                 else:
-                    step_details.append(f"Bez aktualizácie pre {v} (súčasná: {distances[v]})")
+                    step_details.append(f"Bez zmeny pre {v} (d = {distances[v]})")
+                    no_update_edges.append((u, v))
+
             self.algorithm_steps.append({
-                'edges': step_edges,
+                'updated_edges': updated_edges,
+                'no_update_edges': no_update_edges,
                 'stack': edges.copy(),
                 'details': step_details,
-                'structure_type': "Prioritná fronta"
+                'structure_type': "Zoznam hrán"
             })
 
-        step_details = ["Kontrola záporných cyklov:"]
-        negative_cycle = False
+            if not updated:
+                break  
+
+        step_details = [" Kontrola záporných cyklov:"]
+        negative_cycle_edges = []
+
         for u, v, data in edges:
             weight = data.get('weight', 1)
-            if distances[u] + weight < distances[v]:
-                step_details.append(f"Negatívny cyklus detekovaný na hrane ({u}->{v})")
-                negative_cycle = True
-                break
-        if not negative_cycle:
-            step_details.append("Negatívne cykly nenájdené.")
+            if distances[u] != float('inf') and distances[u] + weight < distances[v]:
+                step_details.append(f" Detekovaný záporný cyklus na hrane ({u} → {v}) s váhou {weight}")
+                print(f"❗ Problémová hrana: {u} → {v}, váha = {weight}, d({u}) = {distances[u]}, d({v}) = {distances[v]}")
+                negative_cycle_edges.append((u, v))
+
+        if negative_cycle_edges:
+            self.algorithm_steps.append({
+                'updated_edges': negative_cycle_edges,
+                'no_update_edges': [],
+                'stack': [],
+                'details': step_details,
+                'structure_type': "Detekcia cyklu"
+            })
+            messagebox.showerror("Negatívny cyklus detekovaný!", "Algoritmus nemôže pokračovať.")
+            self.update_status("Negatívny cyklus detekovaný!")
+            return
+
+        step_details.append("Žiadne záporné cykly neboli nájdené.")
         self.algorithm_steps.append({
-            'edges': [],
+            'updated_edges': [],
+            'no_update_edges': [],
             'stack': [],
             'details': step_details,
             'structure_type': ""
         })
 
-        if negative_cycle:
-            messagebox.showerror("Chyba", "Negatívny cyklus detekovaný! Algoritmus nemôže pokračovať.")
-            self.update_status("Negatívny cyklus detekovaný!")
-            return
-
         try:
             path = nx.bellman_ford_path(self.graph, source=source, target=target, weight='weight')
             path_edges = list(zip(path, path[1:]))
             self.algorithm_steps.append({
-                'edges': path_edges,
+                'updated_edges': path_edges,
+                'no_update_edges': [],
                 'stack': [],
-                'details': ["Finálna najkratšia cesta zvýraznená."],
-                'structure_type': "iteruje cez všetky hrany v každej iterácii bez použitia prioritnej fronty alebo zásobníku"
+                'details': ["🏁 Finálna najkratšia cesta zvýraznená."],
+                'structure_type': "Najkratšia cesta"
             })
         except nx.NetworkXUnbounded:
             messagebox.showerror("Chyba", "Negatívny cyklus detekovaný! Algoritmus nemôže pokračovať.")
             self.update_status("Negatívny cyklus detekovaný!")
             return
         except nx.NetworkXNoPath:
-            messagebox.showerror("Chyba", "Medzi zadanými uzlami neexistuje cesta.")
+            messagebox.showerror("Medzi zadanými uzlami neexistuje cesta.", "Nie je možné pokračovať.")
             self.update_status("Medzi zadanými uzlami neexistuje cesta.")
             return
 
         self.current_step_index = -1
         self.next_step_button.config(state=tk.NORMAL)
         self.prev_step_button.config(state=tk.DISABLED)
-        self.update_status("Bellman-Fordov algoritmus pripravený na vizualizáciu.")
+        self.update_status("Bellman-Ford pripravený na vizualizáciu.")
+
+
 
     def run_astar(self):
         self.show_edges = True

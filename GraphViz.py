@@ -100,7 +100,7 @@ class GraphVisualizerApp:
 
         self.canvas.get_tk_widget().bind("<Button-3>", self.show_context_menu)
         self.context_menu = tk.Menu(self.master, tearoff=0)
-        self.context_menu.add_command(label="Zmazať uzol", command=self.delete_node)
+        self.context_menu.add_command(label="Zmazať vrchol", command=self.delete_node)
         self.context_menu.add_command(label="Zmazať hranu", command=self.delete_edge)
 
     def on_hover(self, event):
@@ -122,7 +122,7 @@ class GraphVisualizerApp:
             dy = pos[1] - event.ydata
             if math.hypot(dx, dy) < threshold:
                 self.annot.xy = pos
-                self.annot.set_text(f"Uzol: {node}")
+                self.annot.set_text(f"vrchol: {node}")
                 self.annot.get_bbox_patch().set_facecolor("lightyellow")
                 self.annot.get_bbox_patch().set_alpha(0.9)
                 vis = True
@@ -171,10 +171,10 @@ class GraphVisualizerApp:
         toolbar = ttk.Frame(self.master, padding=5)
         toolbar.pack(side=tk.TOP, fill=tk.X)
 
-        self.add_node_button = ttk.Button(toolbar, text="Pridať uzol", command=self.add_node_mode_on)
+        self.add_node_button = ttk.Button(toolbar, text="Pridat vrchol", command=self.add_node_mode_on)
         self.add_node_button.pack(side=tk.LEFT, padx=5)
 
-        self.add_edge_button = ttk.Button(toolbar, text="Pridať hranu", command=self.add_edge_mode_on)
+        self.add_edge_button = ttk.Button(toolbar, text="Pridat hranu", command=self.add_edge_mode_on)
         self.add_edge_button.pack(side=tk.LEFT, padx=5)
 
         self.prev_step_button = ttk.Button(toolbar, text="Predošlý krok", command=self.prev_step, state=tk.DISABLED)
@@ -280,16 +280,16 @@ class GraphVisualizerApp:
     def add_node_mode_on(self):
         self.add_node_mode = True
         self.master.config(cursor="crosshair")
-        self.update_status("Kliknite na plátno pre pridanie uzla.")
+        self.update_status("Kliknite na plátno pre pridanie vrcholu.")
 
     def add_edge_mode_on(self):
         if len(self.graph.nodes) < 2:
-            messagebox.showwarning("Upozornenie", "Na pridanie hrany sú potrebné aspoň dva uzly.")
+            messagebox.showwarning("Upozornenie", "Na pridanie hrany sú potrebné aspoň dva vrcholy.")
             return
         self.add_edge_mode = True
         self.edge_start_node = None
         self.master.config(cursor="tcross")
-        self.update_status("Najprv vyberte zdrojový uzol, potom cieľový uzol.")
+        self.update_status("Najprv vyberte zdrojový vrchol, potom cieľový vrchol.")
 
     
     def on_canvas_click(self, event):
@@ -309,7 +309,7 @@ class GraphVisualizerApp:
             self.add_node_mode = False
             self.master.config(cursor="")
 
-            self.update_status(f"Uzol {self.node_id} pridaný.")
+            self.update_status(f"vrchol {self.node_id} pridaný.")
 
 
     def on_pick(self, event):
@@ -335,7 +335,7 @@ class GraphVisualizerApp:
 
             if self.edge_start_node is None:
                 self.edge_start_node = selected_node
-                self.update_status(f"Zdrojový uzol {selected_node} vybraný. Teraz vyberte cieľový uzol.")
+                self.update_status(f"Zdrojový vrchol {selected_node} vybraný. Teraz vyberte cieľový vrchol.")
             else:
                 if selected_node != self.edge_start_node:
                     weight = simpledialog.askfloat("Hodnota hrany", "Zadajte hodnotu hrany:")
@@ -344,7 +344,7 @@ class GraphVisualizerApp:
                 
                     self.graph.add_edge(self.edge_start_node, selected_node, weight=weight)
 
-                    self.update_status(f"Hrana medzi uzlami {self.edge_start_node} a {selected_node} pridaná.")
+                    self.update_status(f"Hrana medzi vrcholami {self.edge_start_node} a {selected_node} pridaná.")
                     self.draw_graph()
                 else:
                     messagebox.showwarning("Upozornenie", "Nemôžete vytvoriť hranu zo samotného seba.")
@@ -516,7 +516,7 @@ class GraphVisualizerApp:
                 if len(item) == 3:
                     self.stack_listbox.insert(tk.END, f"Hrana: ({item[1]}->{item[2]}), Hodnota: {item[0]}")
                 elif len(item) == 2:
-                    self.stack_listbox.insert(tk.END, f"Uzol: {item[1]}, Vzdialenosť: {item[0]}")
+                    self.stack_listbox.insert(tk.END, f"vrchol: {item[1]}, Vzdialenosť: {item[0]}")
                 else:
                     self.stack_listbox.insert(tk.END, str(item))
             else:
@@ -530,14 +530,14 @@ class GraphVisualizerApp:
         self.details_text.config(state=tk.DISABLED)
 
     def delete_node(self):
-        node_id = simpledialog.askinteger("Zmazať uzol", "Zadajte ID uzla na zmazanie:")
+        node_id = simpledialog.askinteger("Zmazať vrchol", "Zadajte ID vrchola na zmazanie:")
         if node_id in self.graph.nodes:
             self.graph.remove_node(node_id)
             self.positions.pop(node_id, None)
             self.draw_graph()
-            self.update_status(f"Uzol {node_id} zmazaný.")
+            self.update_status(f"vrchol {node_id} zmazaný.")
         else:
-            messagebox.showerror("Chyba", "Uzol s týmto ID neexistuje.")
+            messagebox.showerror("Chyba", "vrchol s týmto ID neexistuje.")
 
     def delete_edge(self):
         edge = simpledialog.askstring("Zmazať hranu", "Zadajte hranu vo formáte 'zdroj,ciel':")
@@ -605,11 +605,11 @@ class GraphVisualizerApp:
             "Výstup: Pole vzdialeností h, pole predchodcov P"
         )
         self.display_pseudocode(pseudocode)
-        source = simpledialog.askinteger("Dijkstrov algoritmus", "Zadajte zdrojový uzol:")
+        source = simpledialog.askinteger("Dijkstrov algoritmus", "Zadajte zdrojový vrchol:")
         self.master.update()
-        target = simpledialog.askinteger("Dijkstrov algoritmus", "Zadajte cieľový uzol:")
+        target = simpledialog.askinteger("Dijkstrov algoritmus", "Zadajte cieľový vrchol:")
         if source not in self.graph.nodes or target not in self.graph.nodes:
-            messagebox.showerror("Chyba", "Nesprávne uzly.")
+            messagebox.showerror("Chyba", "Nesprávne vrcholy.")
             return
 
         self.draw_graph()
@@ -636,17 +636,17 @@ class GraphVisualizerApp:
                 if new_distance < distances[neighbor]:
                     distances[neighbor] = new_distance
                     priority_queue.append((new_distance, neighbor))
-                    step_details.append(f"Aktualizácia: vzdialenosť uzla {neighbor} = {new_distance}")
+                    step_details.append(f"Aktualizácia: vzdialenosť vrchola {neighbor} = {new_distance}")
                     updated_edges.append((current_node, neighbor))
                 else:
-                    step_details.append(f"Bez aktualizácie pre uzol {neighbor} (súčasná: {distances[neighbor]})")
+                    step_details.append(f"Bez aktualizácie pre vrchol {neighbor} (súčasná: {distances[neighbor]})")
                     no_update_edges.append((current_node, neighbor))
             self.algorithm_steps.append({
                 'updated_edges': updated_edges,
                 'no_update_edges': no_update_edges,
                 'stack': priority_queue.copy(),
                 'details': step_details,
-                'structure_type': "Prioritná fronta"
+                'structure_type': "Prioritný front"
             })
 
         try:
@@ -664,7 +664,7 @@ class GraphVisualizerApp:
             self.prev_step_button.config(state=tk.DISABLED)
             self.update_status("Dijkstrov algoritmus pripravený na vizualizáciu.")
         except nx.NetworkXNoPath:
-            messagebox.showerror("Chyba", "Medzi zadanými uzlami neexistuje cesta.")
+            messagebox.showerror("Chyba", "Medzi zadanými vrcholami neexistuje cesta.")
 
     def run_bellman_ford(self):
         self.clear_step_visualization()
@@ -677,7 +677,7 @@ class GraphVisualizerApp:
             self.show_weights = True
 
         pseudocode = (
-            "Vstup: Graf G a počiatočný uzol v0\n"
+            "Vstup: Graf G a počiatočný vrchol v0\n"
             "1. Inicializácia vzdialeností: pre všetky vrcholy v\n"
             "2.     d(v) ← +∞\n"
             "3.     d(v0) ← 0\n"
@@ -693,12 +693,12 @@ class GraphVisualizerApp:
         )
         self.display_pseudocode(pseudocode)
 
-        source = simpledialog.askinteger("Bellman-Fordov algoritmus", "Zadajte zdrojový uzol:")
+        source = simpledialog.askinteger("Bellman-Fordov algoritmus", "Zadajte zdrojový vrchol:")
         self.master.update()
-        target = simpledialog.askinteger("Bellman-Fordov algoritmus", "Zadajte cieľový uzol:")
+        target = simpledialog.askinteger("Bellman-Fordov algoritmus", "Zadajte cieľový vrchol:")
 
         if source not in self.graph.nodes or target not in self.graph.nodes:
-            messagebox.showerror("Chyba", "Nesprávne uzly.")
+            messagebox.showerror("Chyba", "Nesprávne vrcholy.")
             return
 
         self.draw_graph()
@@ -784,8 +784,8 @@ class GraphVisualizerApp:
             self.update_status("Negatívny cyklus detekovaný!")
             return
         except nx.NetworkXNoPath:
-            messagebox.showerror("Medzi zadanými uzlami neexistuje cesta.", "Nie je možné pokračovať.")
-            self.update_status("Medzi zadanými uzlami neexistuje cesta.")
+            messagebox.showerror("Medzi zadanými vrcholami neexistuje cesta.", "Nie je možné pokračovať.")
+            self.update_status("Medzi zadanými vrcholami neexistuje cesta.")
             return
 
         self.current_step_index = -1
@@ -824,11 +824,11 @@ class GraphVisualizerApp:
           "Výstup: Najkratšia cesta"
         )
         self.display_pseudocode(pseudocode)
-        source = simpledialog.askinteger("A* algoritmus", "Zadajte zdrojový uzol:")
+        source = simpledialog.askinteger("A* algoritmus", "Zadajte zdrojový vrchol:")
         self.master.update()
-        target = simpledialog.askinteger("A* algoritmus", "Zadajte cieľový uzol:")
+        target = simpledialog.askinteger("A* algoritmus", "Zadajte cieľový vrchol:")
         if source not in self.graph.nodes or target not in self.graph.nodes:
-            messagebox.showerror("Chyba", "Nesprávne uzly.")
+            messagebox.showerror("Chyba", "Nesprávne vrcholy.")
             return
 
         self.draw_graph()
@@ -842,11 +842,11 @@ class GraphVisualizerApp:
         while open_list:
             open_list.sort(key=lambda x: x[0])
             current_f, current = open_list.pop(0)
-            step_details = [f"Spracovávame uzol {current} (f = {f_scores[current]:.2f})"]
+            step_details = [f"Spracovávame vrchol {current} (f = {f_scores[current]:.2f})"]
             updated_edges = []
             no_update_edges = []
             if current == target:
-                step_details.append("Cieľový uzol dosiahnutý.")
+                step_details.append("Cieľový vrchol dosiahnutý.")
                 break
             for neighbor in self.graph.neighbors(current):
                 weight = self.graph[current][neighbor].get('weight', 1)
@@ -867,7 +867,7 @@ class GraphVisualizerApp:
                 'no_update_edges': no_update_edges,
                 'stack': open_list.copy(),
                 'details': step_details,
-                'structure_type': "Prioritná fronta"
+                'structure_type': "Prioritný front"
             })
 
         try:
@@ -879,7 +879,7 @@ class GraphVisualizerApp:
             self.prev_step_button.config(state=tk.DISABLED)
             self.update_status("A* algoritmus pripravený na vizualizáciu.")
         except nx.NetworkXNoPath:
-            messagebox.showerror("Chyba", "Medzi zadanými uzlami neexistuje cesta.")
+            messagebox.showerror("Chyba", "Medzi zadanými vrcholami neexistuje cesta.")
 
     def run_kruskal(self):
         self.show_edges = True
@@ -956,9 +956,9 @@ class GraphVisualizerApp:
 
         pseudocode = (
             "Vstup: Graf G\n"
-            "1. Vyberieme ľubovoľný počiatočný uzol v0\n"
+            "1. Vyberieme ľubovoľný počiatočný vrchol v0\n"
             "2. MST ← {v0}, hranový zoznam ← všetky hrany v0\n"
-            "3. Kým MST neobsahuje všetky uzly:\n"
+            "3. Kým MST neobsahuje všetky vrcholy:\n"
             "4.     Vyber hranu (u, v) s najmenšou váhou, kde u ∈ MST, v ∉ MST\n"
             "5.     Pridať v do MST\n"
             "6.     Pridať všetky nové hrany (v, x) do hranového zoznamu\n"
@@ -980,8 +980,8 @@ class GraphVisualizerApp:
         self.algorithm_steps.append({
             'edges': mst_edges.copy(),
             'stack': priority_queue.copy(),
-            'details': [f"Začiatok v uzle {start_node}", f"Počiatočné hrany: {priority_queue}"],
-            'structure_type': "Prioritná fronta"
+            'details': [f"Začiatok vo vrchole {start_node}", f"Počiatočné hrany: {priority_queue}"],
+            'structure_type': "Prioritný front"
         })
 
         while priority_queue:
@@ -991,7 +991,7 @@ class GraphVisualizerApp:
             if v not in mst_nodes:
                 mst_nodes.add(v)
                 mst_edges.append((u, v))
-                step_details.append(f"Uzol {v} pridaný do MST.")
+                step_details.append(f"vrchol {v} pridaný do MST.")
                 for neighbor in self.graph.neighbors(v):
                     if neighbor not in mst_nodes:
                         edge_weight = self.graph[v][neighbor]['weight']
@@ -1003,7 +1003,7 @@ class GraphVisualizerApp:
                 'edges': mst_edges.copy(),
                 'stack': priority_queue.copy(),
                 'details': step_details,
-                'structure_type': "Prioritná fronta"
+                'structure_type': "Prioritný front"
             })
 
         self.algorithm_steps.append({
@@ -1022,7 +1022,7 @@ class GraphVisualizerApp:
         self.show_edges = False
         pseudocode = (
             "Vstup: Orientovaný graf G\n"
-            "1. Spustiť DFS a zaznamenať časy ukončenia uzlov\n"
+            "1. Spustiť DFS a zaznamenať časy ukončenia vrcholov\n"
             "2. Prevrátiť všetky hrany v grafe G\n"
             "3. Spustiť DFS na novom grafe podľa klesajúceho poradia ukončenia\n"
             "4. Každá DFS návšteva tvorí jednu silne súvislú komponentu (SCC)\n"
@@ -1043,7 +1043,7 @@ class GraphVisualizerApp:
             self.algorithm_steps.append({
                 'highlight': [node],
                 'stack': finish_stack.copy(),
-                'details': [f"Fáza 1: Návšteva uzla {node}"],
+                'details': [f"Fáza 1: Návšteva vrcholu {node}"],
                 'structure_type': "Zásobník"
             })
             for neighbor in self.graph.neighbors(node):
@@ -1053,7 +1053,7 @@ class GraphVisualizerApp:
             self.algorithm_steps.append({
                 'highlight': [node],
                 'stack': finish_stack.copy(),
-                'details': [f"Fáza 1: Uzol {node} dokončený, pridaný do zásobníka"],
+                'details': [f"Fáza 1: vrchol {node} dokončený, pridaný do zásobníka"],
                 'structure_type': ""
             })
 
@@ -1084,7 +1084,7 @@ class GraphVisualizerApp:
                 self.algorithm_steps.append({
                     'highlight': [node],
                     'stack': stack.copy(),
-                    'details': [f"Fáza 3: DFS z uzla {node} v prevrátenom grafe"],
+                    'details': [f"Fáza 3: DFS z vrcholu {node} v prevrátenom grafe"],
                     'structure_type': "Zásobník"
                 })
                 while stack:
@@ -1095,7 +1095,7 @@ class GraphVisualizerApp:
                         self.algorithm_steps.append({
                             'highlight': [current],
                             'stack': stack.copy(),
-                            'details': [f"Návšteva uzla {current}"],
+                            'details': [f"Návšteva vrcholu {current}"],
                             'structure_type': "Zásobník"
                         })
                         for neighbor in reversed_graph.neighbors(current):
@@ -1132,16 +1132,16 @@ class GraphVisualizerApp:
         self.show_edges = False
         pseudocode = (
             "Vstup: Orientovaný graf G\n"
-            "1. Inicializácia indexov a low-link hodnôt pre všetky uzly\n"
-            "2. Spustiť DFS pre každý neobjavený uzol:\n"
-            "3.     Nastaviť index a low-link uzla\n"
-            "4.     Pridať uzol do zásobníka\n"
-            "5.     Pre všetkých následníkov w uzla:\n"
+            "1. Inicializácia indexov a low-link hodnôt pre všetky vrcholy\n"
+            "2. Spustiť DFS pre každý neobjavený vrchol:\n"
+            "3.     Nastaviť index a low-link vrchola\n"
+            "4.     Pridať vrchol do zásobníka\n"
+            "5.     Pre všetkých následníkov w vrchola:\n"
             "6.         Ak w nie je navštívený, spustiť DFS(w) rekurzívne\n"
-            "7.         Aktualizovať low-link uzla podľa w\n"
+            "7.         Aktualizovať low-link vrcholu podľa w\n"
             "8.         Ak w je v zásobníku, aktualizovať low-link\n"
-            "9.     Ak low-link uzla je rovnaký ako jeho index:\n"
-            "10.        Vytvoriť SCC z uzlov v zásobníku\n"
+            "9.     Ak low-link vrcholu je rovnaký ako jeho index:\n"
+            "10.        Vytvoriť SCC z vrcholov v zásobníku\n"
             "Výstup: Zoznam silne súvislých komponentov (SCC)"
         )
         self.display_pseudocode(pseudocode)
@@ -1168,7 +1168,7 @@ class GraphVisualizerApp:
             self.algorithm_steps.append({
                 'highlight': [node],
                 'stack': stack.copy(),
-                'details': [f"Uzol {node} pridaný: index {indices[node]}, low-link {low_link[node]}"],
+                'details': [f"vrchol {node} pridaný: index {indices[node]}, low-link {low_link[node]}"],
                 'structure_type': "Zásobník"
             })
             for neighbor in self.graph.neighbors(node):
@@ -1176,7 +1176,7 @@ class GraphVisualizerApp:
                     self.algorithm_steps.append({
                         'highlight': [neighbor],
                         'stack': stack.copy(),
-                        'details': [f"Prechod na suseda {neighbor} z uzla {node}"],
+                        'details': [f"Prechod na suseda {neighbor} z vrcholu {node}"],
                         'structure_type': "Zásobník"
                     })
                     strong_connect(neighbor)
@@ -1200,7 +1200,7 @@ class GraphVisualizerApp:
                 self.algorithm_steps.append({
                     'highlight': [node],
                     'stack': stack.copy(),
-                    'details': [f"Uzol {node} je koreňom SCC, začíname vytvárať SCC."],
+                    'details': [f"vrchol {node} je koreňom SCC, začíname vytvárať SCC."],
                     'structure_type': "Zásobník"
                 })
                 while True:
@@ -1210,7 +1210,7 @@ class GraphVisualizerApp:
                     self.algorithm_steps.append({
                         'highlight': [w],
                         'stack': stack.copy(),
-                        'details': [f"Vyradený uzol {w} zo zásobníka, aktuálne SCC: {scc}"],
+                        'details': [f"Vyradený vrchol {w} zo zásobníka, aktuálne SCC: {scc}"],
                         'structure_type': "Zásobník"
                     })
                     if w == node:
@@ -1286,10 +1286,10 @@ class GraphVisualizerApp:
             "Ako ju používať:\n"
             "1. Vyberte si algoritmus z menu 'Algoritmy'. Algoritmy, ktoré vyžadujú orientovaný graf (Kosarajuho, Tarjanov), sa spustia len ak je prepnutý orientovaný režim.\n"
             "2. Ak algoritmus vyžaduje váhy (Dijkstrov, Bellman-Ford, A*), aplikácia overí, či sú váhy správne nastavené. Ak nie, zobrazí sa upozornenie a váhy sa deaktivujú (nebudú zobrazené).\n"
-            "3. Pomocou tlačidiel 'Pridať uzol' a 'Pridať hranu' môžete vytvoriť vlastný graf, alebo načítať vzorový graf cez menu 'Súbor'.\n"
+            "3. Pomocou tlačidiel 'Pridať vrchol' a 'Pridať hranu' môžete vytvoriť vlastný graf, alebo načítať vzorový graf cez menu 'Súbor'.\n"
             "4. Po spustení algoritmu sa krok za krokom zobrazí, čo sa deje – aktualizované hrany (zelená) a hrany bez aktualizácie (červená, so šikmým štýlom) sú animované.\n"
             "5. Použite tlačidlá 'Predošlý krok' a 'Nasledujúci krok' na prechod medzi jednotlivými krokmi a sledujte detailný popis v postrannom paneli.\n"
-            "6. Pri prejdení myšou nad uzlami sa zobrazí tooltip s informáciou o uzle.\n\n"
+            "6. Pri prejdení myšou nad vrcholami sa zobrazí tooltip s informáciou o vrchole.\n\n"
             "Tipy:\n"
             " - Ak algoritmus vyžaduje orientovaný graf, ale aktuálny graf je neorientovaný, zobrazí sa upozornenie.\n"
             " - Ak niektorá hrana nemá nastavenú váhu (alebo je nečíselná), váhy budú deaktivované a algoritmus bude používať predvolenú hodnotu 1.\n\n"

@@ -514,9 +514,12 @@ class GraphVisualizerApp:
         for item in stack:
             if isinstance(item, tuple):
                 if len(item) == 3:
-                    self.stack_listbox.insert(tk.END, f"Hrana: Vrchol: {item[1]}->{item[2]}-> Vrchol: {item[0]}")
+                    self.stack_listbox.insert(tk.END, f"Hrana: Vrchol: {item[1]}->{item[2]}-> Ohodnotenie: {item[0]}")
                 elif len(item) == 2:
                     self.stack_listbox.insert(tk.END, f"vrchol: {item[1]}, Vzdialenosť: {item[0]}")
+                elif len(item) == 3:
+                    self.stack_listbox.insert(tk.END, f"{item[2]} ← {item[1]} (vzdialenosť: {item[0]})")
+
                 else:
                     self.stack_listbox.insert(tk.END, str(item))
             else:
@@ -577,9 +580,11 @@ class GraphVisualizerApp:
     def run_dijkstra(self):
         self.clear_step_visualization()
         self.show_edges = True
+
         if self.contains_negative_edge():
             messagebox.showerror("Tento algoritmus nepracuje so zápornými hranami")
             return
+
         if not self.check_weights():
             messagebox.showwarning("Upozornenie", "Nie všetky hrany majú nastavenú váhu. Váhy budú deaktivované pre tento algoritmus.")
             self.show_weights = False
@@ -587,40 +592,44 @@ class GraphVisualizerApp:
             self.show_weights = True
 
         pseudocode = (
-    "DIJKSTRA(G, w, s)\n"
-    "1  pre každý vrchol u ∈ G.V\n"
-    "2      u.vzdialenosť = ∞\n"
-    "3      u.predchodca = NIL\n"
-    "4  s.vzdialenosť = 0\n"
-    "5  S = ∅\n"
-    "6  Q = G.V\n"
-    "7  kým Q ≠ ∅\n"
-    "8      u = EXTRAHUJ-MIN(Q)\n"
-    "9      S = S ∪ {u}\n"
-    "10 pre každý vrchol v ∈ G.Susedia[u]\n"
-    "11     ak v ∈ Q a v.vzdialenosť > u.vzdialenosť + w(u, v)\n"
-    "12             v.vzdialenosť = u.vzdialenosť + w(u, v)\n"
-    "13             v.predchodca = u\n"
-)
-
+            "DIJKSTRA(G, w, s)\n"
+            "1  pre každý vrchol u ∈ G.V\n"
+            "2      u.vzdialenosť = ∞\n"
+            "3      u.predchodca = NIL\n"
+            "4  s.vzdialenosť = 0\n"
+            "5  S = ∅\n"
+            "6  Q = G.V\n"
+            "7  kým Q ≠ ∅\n"
+            "8      u = EXTRAHUJ-MIN(Q)\n"
+            "9      S = S ∪ {u}\n"
+            "10 pre každý vrchol v ∈ G.Susedia[u]\n"
+            "11     ak v ∈ Q a v.vzdialenosť > u.vzdialenosť + w(u, v)\n"
+            "12         v.vzdialenosť = u.vzdialenosť + w(u, v)\n"
+            "13         v.predchodca = u\n"
+        )
         self.display_pseudocode(pseudocode)
+
         source = simpledialog.askinteger("Dijkstrov algoritmus", "Zadajte zdrojový vrchol:")
         self.master.update()
         target = simpledialog.askinteger("Dijkstrov algoritmus", "Zadajte cieľový vrchol:")
+
         if source not in self.graph.nodes or target not in self.graph.nodes:
             messagebox.showerror("Chyba", "Nesprávne vrcholy.")
             return
 
         self.draw_graph()
         self.algorithm_steps = []
+
         distances = {node: float('inf') for node in self.graph.nodes}
         distances[source] = 0
-        priority_queue = [(0, source)]
+        predecessors = {node: None for node in self.graph.nodes}
+        priority_queue = [(0, source, None)]  # (vzdialenosť, cieľ, predchodca)
         visited = set()
 
         while priority_queue:
             priority_queue.sort(key=lambda x: x[0])
-            current_distance, current_node = priority_queue.pop(0)
+            current_distance, current_node, from_node = priority_queue.pop(0)
+
             if current_node in visited:
                 continue
             visited.add(current_node)
@@ -628,26 +637,34 @@ class GraphVisualizerApp:
             step_details = []
             updated_edges = []
             no_update_edges = []
+
+            step_details.append(f"Spracovávaný vrchol: {current_node} (vzdialenosť: {current_distance})")
+
             for neighbor in self.graph.neighbors(current_node):
                 weight = self.graph[current_node][neighbor].get('weight', 1)
                 new_distance = current_distance + weight
-                step_details.append(f"Zvažovaná hrana ({current_node}->{neighbor}) s hodnotou {weight}")
+                step_details.append(f"Zvažovaná hrana ({current_node} → {neighbor}) s váhou {weight}")
+
                 if new_distance < distances[neighbor]:
                     distances[neighbor] = new_distance
-                    priority_queue.append((new_distance, neighbor))
-                    step_details.append(f"Aktualizácia: vzdialenosť vrchola {neighbor} = {new_distance}")
+                    predecessors[neighbor] = current_node
+                    priority_queue.append((new_distance, neighbor, current_node))
+                    step_details.append(f"Aktualizácia: vzdialenosť {neighbor} = {new_distance}")
+                    step_details.append(f"Predchodca {neighbor} = {current_node}")
                     updated_edges.append((current_node, neighbor))
                 else:
-                    step_details.append(f"Bez aktualizácie pre vrchol {neighbor} (súčasná: {distances[neighbor]})")
+                    step_details.append(f"Bez zmeny pre {neighbor} (aktuálna vzdialenosť: {distances[neighbor]})")
                     no_update_edges.append((current_node, neighbor))
+
             self.algorithm_steps.append({
                 'updated_edges': updated_edges,
                 'no_update_edges': no_update_edges,
-                'stack': priority_queue.copy(),
+                'stack': priority_queue.copy(),  # obsahuje aj predchodcov
                 'details': step_details,
                 'structure_type': "Prioritný front"
             })
 
+        # Finálna cesta
         try:
             path = nx.dijkstra_path(self.graph, source=source, target=target, weight='weight')
             path_edges = list(zip(path, path[1:]))
@@ -664,6 +681,7 @@ class GraphVisualizerApp:
             self.update_status("Dijkstrov algoritmus pripravený na vizualizáciu.")
         except nx.NetworkXNoPath:
             messagebox.showerror("Chyba", "Medzi zadanými vrcholami neexistuje cesta.")
+
 
     def run_bellman_ford(self):
         self.clear_step_visualization()

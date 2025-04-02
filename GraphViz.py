@@ -514,7 +514,7 @@ class GraphVisualizerApp:
         for item in stack:
             if isinstance(item, tuple):
                 if len(item) == 3:
-                    self.stack_listbox.insert(tk.END, f"Hrana: ({item[1]}->{item[2]}), Hodnota: {item[0]}")
+                    self.stack_listbox.insert(tk.END, f"Hrana: Vrchol: {item[1]}->{item[2]}-> Vrchol: {item[0]}")
                 elif len(item) == 2:
                     self.stack_listbox.insert(tk.END, f"vrchol: {item[1]}, Vzdialenosť: {item[0]}")
                 else:
@@ -587,23 +587,22 @@ class GraphVisualizerApp:
             self.show_weights = True
 
         pseudocode = (
-            "Vstup: Graf G a počiatočný vrchol v0\n"
-            "1. Pre všetky vrcholy v:\n"
-            "2.     stav(v) ← nenájdený\n"
-            "3.     h(v) ← +∞\n"
-            "4.     P(v) ← nedefinované\n"
-            "5.     stav(v0) ← otvorený\n"
-            "6.     h(v0) ← 0\n"
-            "7. Pokiaľ existujú nejaké otvorené vrcholy:\n"
-            "8.     Vyberieme otvorený vrchol v s najmenším h(v)\n"
-            "9.     Pre všetkých následníkov w vrcholu v:\n"
-            "10.        Pokiaľ h(w) > h(v) + `(v, w):\n"
-            "11.             h(w) ← h(v) + `(v, w)\n"
-            "12.             stav(w) ← otvorený\n"
-            "13.             P(w) ← v\n"
-            "14.     stav(v) ← uzavrený\n"
-            "Výstup: Pole vzdialeností h, pole predchodcov P"
-        )
+    "DIJKSTRA(G, w, s)\n"
+    "1  pre každý vrchol u ∈ G.V\n"
+    "2      u.vzdialenosť = ∞\n"
+    "3      u.predchodca = NIL\n"
+    "4  s.vzdialenosť = 0\n"
+    "5  S = ∅\n"
+    "6  Q = G.V\n"
+    "7  kým Q ≠ ∅\n"
+    "8      u = EXTRAHUJ-MIN(Q)\n"
+    "9      S = S ∪ {u}\n"
+    "10 pre každý vrchol v ∈ G.Susedia[u]\n"
+    "11     ak v ∈ Q a v.vzdialenosť > u.vzdialenosť + w(u, v)\n"
+    "12             v.vzdialenosť = u.vzdialenosť + w(u, v)\n"
+    "13             v.predchodca = u\n"
+)
+
         self.display_pseudocode(pseudocode)
         source = simpledialog.askinteger("Dijkstrov algoritmus", "Zadajte zdrojový vrchol:")
         self.master.update()
@@ -677,20 +676,22 @@ class GraphVisualizerApp:
             self.show_weights = True
 
         pseudocode = (
-            "Vstup: Graf G a počiatočný vrchol v0\n"
-            "1. Inicializácia vzdialeností: pre všetky vrcholy v\n"
-            "2.     d(v) ← +∞\n"
-            "3.     d(v0) ← 0\n"
-            "4. Pre |V| - 1 iterácií:\n"
-            "5.     Pre každú hranu (u, v) s váhou w:\n"
-            "6.         Ak d(u) + w < d(v):\n"
-            "7.             d(v) ← d(u) + w\n"
-            "8. Na kontrolu záporných cyklov:\n"
-            "9.     Pre každú hranu (u, v) s váhou w:\n"
-            "10.        Ak d(u) + w < d(v):\n"
-            "11.            Detekovaný záporný cyklus!\n"
-            "Výstup: Pole vzdialeností d"
+        "BELLMAN-FORD(G, w, s)\n"
+        "1  pre každý vrchol v ∈ G.V:\n"
+        "2      v.vzdialenosť = ∞\n"
+        "3      v.predchodca = NIL\n"
+        "4  s.vzdialenosť = 0\n"
+        "5  pre i = 1 po |G.V| - 1:\n"
+        "6      pre každú hranu (u, v) ∈ G.E:\n"
+        "7          ak v.vzdialenosť > u.vzdialenosť + w(u, v):\n"
+        "8              v.vzdialenosť = u.vzdialenosť + w(u, v)\n"
+        "9              v.predchodca = u\n"
+        "10 pre každú hranu (u, v) ∈ G.E:\n"
+        "11     ak v.vzdialenosť > u.vzdialenosť + w(u, v):\n"
+        "12         hlás chybu: graf obsahuje záporný cyklus\n"
+        "Výstup: Pole vzdialeností a predchodcov, alebo chyba pri zápornom cykle\n"
         )
+
         self.display_pseudocode(pseudocode)
 
         source = simpledialog.askinteger("Bellman-Fordov algoritmus", "Zadajte zdrojový vrchol:")
@@ -808,21 +809,30 @@ class GraphVisualizerApp:
             self.show_weights = True
 
         pseudocode = (
-          "Vstup: Graf G, počiatočný vrchol v0 a cieľový vrchol v_end\n"
-          "1. Inicializácia: g(v) ← +∞, f(v) ← +∞ pre všetky vrcholy\n"
-          "2. g(v0) ← 0\n"
-          "3. f(v0) ← heuristika(v0, v_end)\n"
-          "4. Otvorený zoznam ← {v0}\n"
-          "5. Kým otvorený zoznam nie je prázdny:\n"
-          "6.     Vyber vrchol v s najnižším f(v)\n"
-          "7.     Ak v == v_end, ukonči algoritmus\n"
-          "8.     Pre všetkých následníkov w vrcholu v:\n"
-          "9.         Ak g(w) > g(v) + d(v, w):\n"
-          "10.            g(w) ← g(v) + d(v, w)\n"
-          "11.            f(w) ← g(w) + heuristika(w, v_end)\n"
-          "12.            Pridať w do otvoreného zoznamu\n"
-          "Výstup: Najkratšia cesta"
+            "A*(G, štart, cieľ, h)\n"
+            "1  pre každý vrchol v ∈ G.V:\n"
+            "2      g[v] = ∞        # skutočná vzdialenosť od štartu\n"
+            "3      f[v] = ∞        # odhadovaná celková vzdialenosť (g + h)\n"
+            "4      predchodca[v] = NIL\n"
+            "5  g[štart] = 0\n"
+            "6  f[štart] = h(štart)\n"
+            "7  otvorené = množina obsahujúca iba štart\n"
+            "8  kým otvorené nie je prázdne:\n"
+            "9      v = vrchol v otvorených s najmenším f[v]\n"
+            "10     ak v == cieľ:\n"
+            "11         vráť cestu zrekonštruovanú pomocou predchodca\n"
+            "12     odstráň v z otvorených\n"
+            "13     pre každého suseda u vrcholu v:\n"
+            "14         dočasné_g = g[v] + w(v, u)\n"
+            "15         ak dočasné_g < g[u]:\n"
+            "16             predchodca[u] = v\n"
+            "17             g[u] = dočasné_g\n"
+            "18             f[u] = g[u] + h(u)\n"
+            "19             ak u nie je v otvorených:\n"
+            "20                 pridaj u do otvorených\n"
+            "Výstup: Najkratšia cesta z 'štart' do 'cieľ' alebo informácia, že neexistuje\n"
         )
+
         self.display_pseudocode(pseudocode)
         source = simpledialog.askinteger("A* algoritmus", "Zadajte zdrojový vrchol:")
         self.master.update()
@@ -889,14 +899,18 @@ class GraphVisualizerApp:
             return
 
         pseudocode = (
-                "Vstup: Graf G\n"
-               "1. Inicializácia: Zoradiť hrany podľa váhy\n"
-               "2. Pre každú hranu (u, v) v poradí od najmenšej váhy:\n"
-               "3.     Ak u a v nie sú v tom istom komponente:\n"
-               "4.         Pridať hranu (u, v) do MST\n"
-               "5.         Zlúčiť komponenty u a v\n"
-               "Výstup: Minimálny kostrový strom (MST)"
+            "KRUSKAL(G)\n"
+            "1  A ← ∅                # množina hrán v minimálnej kostre\n"
+            "2  Pre každý vrchol v ∈ G.V:\n"
+            "3      VYTVOR-MNOŽINU(v)\n"
+            "4  Zoradíme všetky hrany (u, v) ∈ G.E podľa váhy w(u, v) vzostupne\n"
+            "5  Pre každú hranu (u, v) ∈ G.E v tomto poradí:\n"
+            "6      ak ZISTI-MNOŽINU(u) ≠ ZISTI-MNOŽINU(v):\n"
+            "7          A ← A ∪ {(u, v)}\n"
+            "8          ZJEDNOTI-MNOŽINY(u, v)\n"
+            "9  vráť A ako množinu hrán minimálnej kostry\n"
         )
+
         self.display_pseudocode(pseudocode)
 
         if len(self.graph.edges) < 1:
@@ -955,15 +969,22 @@ class GraphVisualizerApp:
             return
 
         pseudocode = (
-            "Vstup: Graf G\n"
-            "1. Vyberieme ľubovoľný počiatočný vrchol v0\n"
-            "2. MST ← {v0}, hranový zoznam ← všetky hrany v0\n"
-            "3. Kým MST neobsahuje všetky vrcholy:\n"
-            "4.     Vyber hranu (u, v) s najmenšou váhou, kde u ∈ MST, v ∉ MST\n"
-            "5.     Pridať v do MST\n"
-            "6.     Pridať všetky nové hrany (v, x) do hranového zoznamu\n"
-            "Výstup: Minimálny kostrový strom (MST)"
+            "PRIM(G, štart)\n"
+            "1  Pre každý vrchol v ∈ G.V:\n"
+            "2      kľúč[v] ← ∞\n"
+            "3      predchodca[v] ← NIL\n"
+            "4  kľúč[štart] ← 0\n"
+            "5  Q ← množina všetkých vrcholov V\n"
+            "6  Kým Q nie je prázdna:\n"
+            "7      u ← vrchol z Q s najmenším kľúč[u]\n"
+            "8      Odstráň u z Q\n"
+            "9      Pre každého suseda v vrcholu u:\n"
+            "10         ak v ∈ Q a w(u, v) < kľúč[v]:\n"
+            "11             predchodca[v] ← u\n"
+            "12             kľúč[v] ← w(u, v)\n"
+            "Výstup: Pole predchodcov definuje minimálnu kostru\n"
         )
+
         self.display_pseudocode(pseudocode)
 
         if len(self.graph.nodes) < 1:
@@ -1021,13 +1042,21 @@ class GraphVisualizerApp:
         self.clear_step_visualization()
         self.show_edges = False
         pseudocode = (
-            "Vstup: Orientovaný graf G\n"
-            "1. Spustiť DFS a zaznamenať časy ukončenia vrcholov\n"
-            "2. Prevrátiť všetky hrany v grafe G\n"
-            "3. Spustiť DFS na novom grafe podľa klesajúceho poradia ukončenia\n"
-            "4. Každá DFS návšteva tvorí jednu silne súvislú komponentu (SCC)\n"
-            "Výstup: Zoznam silne súvislých komponentov (SCC)"
+            "KOSARAJU(G)\n"
+            "1  navštívené ← prázdna množina\n"
+            "2  zásobník ← prázdny\n"
+            "3  Pre každý vrchol v ∈ G.V:\n"
+            "4      ak v nie je v navštívené:\n"
+            "5          DFS-PRVÁ-FÁZA(G, v, navštívené, zásobník)\n"
+            "6  GT ← transponovaný graf G (s opačnými hranami)\n"
+            "7  navštívené ← prázdna množina\n"
+            "8  Pre každý vrchol v zo zásobníka (v poradí pop):\n"
+            "9      ak v nie je v navštívené:\n"
+            "10         komponent ← prázdny\n"
+            "11         DFS-DRUHÁ-FÁZA(GT, v, navštívené, komponent)\n"
+            "12         vypíš komponent ako jednu silne súvislú komponentu\n"
         )
+
         self.display_pseudocode(pseudocode)
         if not self.is_directed:
             messagebox.showwarning("Upozornenie", "Kosarajuho algoritmus vyžaduje orientovaný graf.")
@@ -1131,19 +1160,35 @@ class GraphVisualizerApp:
         self.clear_step_visualization()
         self.show_edges = False
         pseudocode = (
-            "Vstup: Orientovaný graf G\n"
-            "1. Inicializácia indexov a low-link hodnôt pre všetky vrcholy\n"
-            "2. Spustiť DFS pre každý neobjavený vrchol:\n"
-            "3.     Nastaviť index a low-link vrchola\n"
-            "4.     Pridať vrchol do zásobníka\n"
-            "5.     Pre všetkých následníkov w vrchola:\n"
-            "6.         Ak w nie je navštívený, spustiť DFS(w) rekurzívne\n"
-            "7.         Aktualizovať low-link vrcholu podľa w\n"
-            "8.         Ak w je v zásobníku, aktualizovať low-link\n"
-            "9.     Ak low-link vrcholu je rovnaký ako jeho index:\n"
-            "10.        Vytvoriť SCC z vrcholov v zásobníku\n"
-            "Výstup: Zoznam silne súvislých komponentov (SCC)"
+            "TARJAN(G)\n"
+            "1  index ← 0\n"
+            "2  zásobník ← prázdny\n"
+            "3  Pre každý vrchol v ∈ G.V:\n"
+            "4      ak v.index nie je definovaný:\n"
+            "5          STRONGCONNECT(v)\n"
+            "\n"
+            "Funkcia STRONGCONNECT(v):\n"
+            "6      v.index ← index\n"
+            "7      v.lowlink ← index\n"
+            "8      index ← index + 1\n"
+            "9      vlož v na zásobník\n"
+            "10     v.naZásobníku ← true\n"
+            "11     Pre každého suseda w vrcholu v:\n"
+            "12         ak w.index nie je definovaný:\n"
+            "13             STRONGCONNECT(w)\n"
+            "14             v.lowlink ← min(v.lowlink, w.lowlink)\n"
+            "15         inak ak w.naZásobníku:\n"
+            "16             v.lowlink ← min(v.lowlink, w.index)\n"
+            "17     ak v.lowlink == v.index:\n"
+            "18         komponent ← prázdny\n"
+            "19         opakuj:\n"
+            "20             w ← zásobník.pop()\n"
+            "21             w.naZásobníku ← false\n"
+            "22             pridaj w do komponentu\n"
+            "23         kým w ≠ v\n"
+            "24         vypíš komponent ako silne súvislú komponentu\n"
         )
+
         self.display_pseudocode(pseudocode)
         if not self.is_directed:
             messagebox.showwarning("Upozornenie", "Tarjanov algoritmus vyžaduje orientovaný graf.")

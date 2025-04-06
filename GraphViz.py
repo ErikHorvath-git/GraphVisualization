@@ -473,38 +473,67 @@ class GraphVisualizerApp:
         self.ax.clear()
         self.ax.set_axis_on()
         self.ax.grid(True)
+        # Vykreslenie uzlov
         nx.draw_networkx_nodes(self.graph, self.positions, ax=self.ax, node_color='skyblue', node_size=500)
-        nx.draw_networkx_edges(self.graph, self.positions, ax=self.ax, edge_color='black', width=1)
-        updated_edges = step.get('updated_edges', [])
-        no_update_edges = step.get('no_update_edges', [])
-        if updated_edges:
-            nx.draw_networkx_edges(self.graph, self.positions, ax=self.ax, edgelist=updated_edges,
-                                   edge_color='green', width=2)
-        if no_update_edges:
-            nx.draw_networkx_edges(self.graph, self.positions, ax=self.ax, edgelist=no_update_edges,
-                                   edge_color='red', width=2, style='dashed')
+        
+        # Ak je v kroku definovaný kľúč 'edges' (MST hrany pre Kruskal/Prim), vykreslíme len tieto hrany
+        if 'edges' in step and step['edges']:
+            nx.draw_networkx_edges(
+                self.graph, self.positions, ax=self.ax,
+                edgelist=step['edges'], edge_color='green', width=2
+            )
+        else:
+            # Inak najprv vykreslíme základné hrany celého grafu
+            nx.draw_networkx_edges(self.graph, self.positions, ax=self.ax, edge_color='black', width=1)
+            # Potom prekreslíme aktualizované hrany, ak existujú
+            updated_edges = step.get('updated_edges', [])
+            no_update_edges = step.get('no_update_edges', [])
+            if updated_edges:
+                nx.draw_networkx_edges(
+                    self.graph, self.positions, ax=self.ax,
+                    edgelist=updated_edges, edge_color='green', width=2
+                )
+            if no_update_edges:
+                nx.draw_networkx_edges(
+                    self.graph, self.positions, ax=self.ax,
+                    edgelist=no_update_edges, edge_color='red', width=2, style='dashed'
+                )
+        
+        # Zvýraznenie uzlov, ak sú definované
         highlight = step.get('highlight', [])
         if highlight:
-            nx.draw_networkx_nodes(self.graph, self.positions, nodelist=highlight, ax=self.ax,
-                                   node_color='yellow', node_size=500)
+            nx.draw_networkx_nodes(
+                self.graph, self.positions, nodelist=highlight, ax=self.ax,
+                node_color='yellow', node_size=500
+            )
+        
+        # Vykreslenie popisov uzlov
         nx.draw_networkx_labels(self.graph, self.positions, ax=self.ax)
+        
+        # Ak je zapnuté zobrazovanie váh, vykreslíme aj ich popisy
         if self.show_weights:
             edge_labels = nx.get_edge_attributes(self.graph, 'weight')
             nx.draw_networkx_edge_labels(self.graph, self.positions, edge_labels=edge_labels, ax=self.ax)
+        
+        # Vykreslenie legendy, ak sú prítomné zmenené hrany
         import matplotlib.lines as mlines
         handles = []
-        if updated_edges:
+        if step.get('updated_edges', []):
             green_line = mlines.Line2D([], [], color='green', linewidth=2, label='Aktualizácia (Update)')
             handles.append(green_line)
-        if no_update_edges:
+        if step.get('no_update_edges', []):
             red_line = mlines.Line2D([], [], color='red', linewidth=2, linestyle='dashed', label='Bez aktualizácie')
             handles.append(red_line)
         if handles:
             self.ax.legend(handles=handles, loc='upper right')
+        
+        # Aktualizácia postranného panela so zásobníkom a detailov kroku
         structure_type = step.get('structure_type', "")
         self.update_stack_display(step.get('stack', []), structure_type)
         self.update_details_display(step.get('details', []))
+        
         self.canvas.draw()
+
 
     def update_stack_display(self, stack, structure_type=""):
         self.stack_listbox.delete(0, tk.END)

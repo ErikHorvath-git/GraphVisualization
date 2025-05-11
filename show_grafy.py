@@ -41,7 +41,7 @@ def get_directed_graph():
     return G, positions
 
 def get_complex_graph():
-    G = nx.Graph()
+    G = nx.DiGraph()
     positions = {
         1: (7.5, -8.0), 2: (-7.5, -7.75), 3: (-5.5, -3.5),
         4: (4.5, 8.25), 5: (-9.75, 3.75), 6: (-2.75, 4.25),

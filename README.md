@@ -1,6 +1,8 @@
-# Vizualizácia grafových algoritmov# 
+# Vizualizácia grafových algoritmov 
 
 Tento projekt je interaktívna aplikácia napísaná v Pythone, ktorá slúži na vizualizáciu rôznych grafových algoritmov. Aplikácia využíva knižnice **Tkinter** na vytváranie grafického rozhrania, **NetworkX** na prácu s grafmi a **Matplotlib** na vykresľovanie grafických prvkov.
+Link na videoukážku : https://youtu.be/iC23LR-Z5UQ
+
 
 ## Funkcie
 

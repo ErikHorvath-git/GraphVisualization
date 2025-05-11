@@ -757,7 +757,7 @@ class GraphVisualizerApp:
 
             for u, v, data in edges:
                 weight = data.get('weight', 1)
-                step_details.append(f"➡️ Kontrola hrany ({u} → {v}), váha {weight}")
+                step_details.append(f" Kontrola hrany ({u} → {v}), váha {weight}")
 
                 if distances[u] != float('inf') and distances[u] + weight < distances[v]:
                     distances[v] = distances[u] + weight
